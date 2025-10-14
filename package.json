@@ -1,0 +1,15 @@
+{
+  "name": "claude-code-plugin",
+  "version": "1.0.0",
+  "description": "AI-forward persistent task management and planning that integrates directly into Claude Code.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "canvas": "^3.2.0"
+  }
+}
