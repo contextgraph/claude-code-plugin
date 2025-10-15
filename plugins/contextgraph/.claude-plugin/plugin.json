@@ -3,11 +3,13 @@
   "version": "0.9.2",
   "description": "A living planning layer that gets smarter with every execution. Your context graph transforms vibe-like ideas into executable plans that improve themselves.",
   "author": {
-    "name": "contextgraph"
+    "name": "contextgraph",
+    "email": "ben.nevile@gmail.com"
   },
   "homepage": "https://contextgraph.dev",
   "repository": "https://github.com/contextgraph/claude-code-plugin",
   "license": "MIT",
+  "category": "planning",
   "keywords": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"],
   "mcpServers": {
     "actions": {

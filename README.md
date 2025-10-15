@@ -1,6 +1,6 @@
 # ContextGraph Plugin for Claude Code
 
-ContextGraph is a **living planning layer** that self-improves with every agentic execution. It provides:
+Your context graph is a **living planning layer** that self-improves with every agentic execution. It provides:
 
 1. **Low-friction planning input**: Vibe-like, natural language planning that integrates everywhere you work
 2. **Living, responsive planning layer**: Plans that improve and evolve with every agentic execution, learning optimal action sizing and context relevance
