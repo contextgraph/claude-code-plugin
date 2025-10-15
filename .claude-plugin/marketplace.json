@@ -10,7 +10,7 @@
       "name": "contextgraph",
       "source": "./plugins/contextgraph",
       "description": "A living planning layer that gets smarter with every execution. Your context graph transforms vibe-like ideas into executable plans that improve themselves.",
-      "version": "0.9.1",
+      "version": "0.9.2",
       "author": {
         "name": "contextgraph"
       },
