@@ -1,7 +1,7 @@
 {
   "name": "contextgraph",
   "version": "0.9.2",
-  "description": "A living planning layer that gets smarter with every execution. Your context graph transforms vibe-like ideas into executable plans that improve themselves.\n\n⚠️ After installing: Run 'claude mcp add contextgraph --transport http https://mcp.contextgraph.dev' and restart Claude Code.",
+  "description": "A living planning layer that gets smarter with every execution. Your context graph transforms vibe-like ideas into executable plans that improve themselves.",
   "author": {
     "name": "contextgraph"
   },
