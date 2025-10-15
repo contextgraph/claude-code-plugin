@@ -10,7 +10,7 @@
   "license": "MIT",
   "keywords": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"],
   "mcpServers": {
-    "contextgraph": {
+    "actions": {
       "type": "http",
       "url": "https://mcp.contextgraph.dev"
     }
