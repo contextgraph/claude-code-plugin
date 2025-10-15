@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "contextgraph": {
+      "transport": "http",
+      "url": "https://mcp.contextgraph.dev"
+    }
+  }
+}
