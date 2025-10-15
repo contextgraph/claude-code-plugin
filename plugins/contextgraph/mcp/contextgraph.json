@@ -1,4 +1,4 @@
 {
-  "transport": "http",
+  "type": "http",
   "url": "https://mcp.contextgraph.dev"
 }
