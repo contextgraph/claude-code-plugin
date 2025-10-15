@@ -14,19 +14,33 @@ The system transforms free-form ideas into optimally-sized, executable actions w
 
 ## Installation
 
-### Add the Marketplace
+### Step 1: Install the Plugin
+
+Via the `/plugin` menu in Claude Code:
+1. Select "Manage marketplaces"
+2. Add marketplace: `contextgraph/claude-code-plugin`
+3. Select "Browse and install plugins"
+4. Install `contextgraph`
+
+### Step 2: Connect MCP Server
+
+After installing the plugin, run this command to connect the MCP server:
 
 ```bash
-/plugin marketplace add contextgraph/claude-code-plugin
+claude mcp add contextgraph --transport http https://mcp.contextgraph.dev
 ```
 
-### Install the Plugin
+Then restart Claude Code.
+
+### Verify Installation
+
+Check that everything is working:
 
 ```bash
-/plugin install contextgraph
+/mcp
 ```
 
-That's it! The plugin automatically configures the ContextGraph MCP server connection.
+You should see `contextgraph` listed as a configured MCP server.
 
 ## Features
 
