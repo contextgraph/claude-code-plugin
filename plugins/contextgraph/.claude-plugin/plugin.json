@@ -1,17 +1,17 @@
 {
   "name": "contextgraph",
   "version": "0.9.0",
-  "description": "Living planning layer that self-improves with every agentic execution",
-  "author": "contextgraph",
+  "description": "A living planning layer that gets smarter with every execution. Your context graph transforms vibe-like ideas into executable plans that improve themselves.",
+  "author": {
+    "name": "contextgraph"
+  },
   "homepage": "https://contextgraph.dev",
   "repository": "https://github.com/contextgraph/claude-code-plugin",
   "license": "MIT",
-  "mcp": {
-    "servers": {
-      "contextgraph": {
-        "source": "./mcp/contextgraph.json"
-      }
+  "keywords": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"],
+  "mcpServers": {
+    "contextgraph": {
+      "url": "https://mcp.contextgraph.dev"
     }
-  },
-  "tags": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"]
+  }
 }
