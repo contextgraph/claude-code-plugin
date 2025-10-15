@@ -1,6 +1,8 @@
 {
-  "name": "ContextGraph Marketplace",
-  "owner": "contextgraph",
+  "name": "contextgraph-marketplace",
+  "owner": {
+    "name": "contextgraph"
+  },
   "description": "AI-forward persistent task management and planning for Claude Code",
   "version": "0.9.0",
   "plugins": [
@@ -9,7 +11,9 @@
       "source": "./plugins/contextgraph",
       "description": "Living planning layer that self-improves with every agentic execution. Transforms free-form ideas into optimally-sized, executable actions with just-right context.",
       "version": "0.9.0",
-      "author": "contextgraph",
+      "author": {
+        "name": "contextgraph"
+      },
       "tags": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"]
     }
   ]
