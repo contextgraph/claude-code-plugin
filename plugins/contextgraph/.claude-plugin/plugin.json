@@ -9,7 +9,6 @@
   "homepage": "https://contextgraph.dev",
   "repository": "https://github.com/contextgraph/claude-code-plugin",
   "license": "MIT",
-  "category": "planning",
   "keywords": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"],
   "mcpServers": {
     "actions": {
