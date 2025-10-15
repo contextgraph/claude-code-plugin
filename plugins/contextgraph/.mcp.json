@@ -1,8 +1,0 @@
-{
-  "servers": {
-    "contextgraph": {
-      "type": "http",
-      "url": "https://mcp.contextgraph.dev"
-    }
-  }
-}
