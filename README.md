@@ -46,6 +46,8 @@ Once installed, Claude Code can use these tools:
 - `complete` - Mark actions as done with completion context
 - `search` - Search actions using semantic similarity and keywords
 - `fetch` - Get full details for specific actions
+- `list_agent_runs` - List agent runs for an action with filtering options
+- `fetch_agent_run` - Get detailed agent run information including event logs
 - `move` - Reorganize action hierarchy
 - `suggest_parent` - Get AI-powered parent suggestions
 - `parse_plan` - Convert unstructured text into structured actions
