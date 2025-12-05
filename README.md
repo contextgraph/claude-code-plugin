@@ -42,7 +42,7 @@ You should see `contextgraph` listed as a configured MCP server.
 Once installed, Claude Code can use these tools:
 
 - `create` - Create new actions with parent and dependency relationships
-- `update` - Update action properties and dependencies
+- `update` - Update action properties including agentReady, dependencies, and completion context
 - `complete` - Mark actions as done with completion context
 - `search` - Search actions using semantic similarity and keywords
 - `fetch` - Get full details for specific actions
@@ -52,6 +52,51 @@ Once installed, Claude Code can use these tools:
 - `suggest_parent` - Get AI-powered parent suggestions
 - `parse_plan` - Convert unstructured text into structured actions
 - `fetch_tree` - View hierarchical action trees
+
+## Agent-Ready Status
+
+The `agentReady` field allows programmatic control over whether an action subtree is ready for autonomous agent execution. This field can be toggled via the MCP `update` tool without requiring web UI access or direct database modifications.
+
+### Purpose
+
+Use `agentReady` to control which action subtrees are available for autonomous agent execution. When set to `false`, the action and its entire subtree are hidden from agent selection, even if they meet other readiness criteria.
+
+### Usage Patterns
+
+**Temporarily blocking agent execution:**
+```javascript
+// Mark an action as not ready for agents
+update({
+  action_id: "action-uuid",
+  agentReady: false
+})
+```
+
+**Re-enabling agent execution:**
+```javascript
+// Make the action available to agents again
+update({
+  action_id: "action-uuid",
+  agentReady: true
+})
+```
+
+### Common Use Cases
+
+- **Work in progress**: Block agent execution while you refine an action's description or requirements
+- **Human review required**: Mark actions that need human decision-making before agent work can proceed
+- **Dependency resolution**: Keep actions blocked until prerequisite work or decisions are complete
+- **Quality gates**: Control when autonomous work can begin on specific subtrees
+
+### How It Works
+
+When an action has `agentReady: false`:
+- The action won't appear in agent selection interfaces
+- Child actions are also blocked from agent execution (inherited blocking)
+- The action remains visible in the web UI and API responses
+- Manual agent execution can still be triggered via the web UI if needed
+
+This field complements other readiness signals (dependencies, prepared status, etc.) to give you fine-grained control over autonomous execution flow.
 
 ## Getting Started
 
