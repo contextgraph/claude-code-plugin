@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"],
   "mcpServers": {
-    "actions": {
+    "steward": {
       "type": "http",
       "url": "https://mcp.steward.foo"
     }

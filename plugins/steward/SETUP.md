@@ -2,15 +2,8 @@
 
 Thank you for installing the Steward plugin!
 
-## Complete Your Setup
-
-To connect to the Steward MCP server, run this command:
-
-```bash
-claude mcp add steward --transport http https://mcp.steward.foo
-```
-
-Then restart Claude Code.
+The Steward MCP server is configured automatically when the plugin is
+installed. Restart Claude Code to pick it up.
 
 ## Verify Installation
 
