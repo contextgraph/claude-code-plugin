@@ -5,13 +5,13 @@
     "email": "ben.nevile@gmail.com"
   },
   "description": "A living planning layer that gets smarter with every execution, for Claude Code",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "plugins": [
     {
       "name": "steward",
       "source": "./plugins/steward",
       "description": "A living planning layer that gets smarter with every execution. Steward transforms vibe-like ideas into executable plans that improve themselves.",
-      "version": "0.9.2",
+      "version": "0.9.3",
       "author": {
         "name": "steward",
         "email": "ben.nevile@gmail.com"
