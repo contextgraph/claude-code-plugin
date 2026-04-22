@@ -1,6 +1,6 @@
-# ContextGraph Plugin for Claude Code
+# Steward Plugin for Claude Code
 
-Your context graph is a **living planning layer** that self-improves with every agentic execution. It provides:
+Steward is a **living planning layer** that self-improves with every agentic execution. It provides:
 
 1. **Low-friction planning input**: Vibe-like, natural language planning that integrates everywhere you work
 2. **Living, responsive planning layer**: Plans that improve and evolve with every agentic execution, learning optimal action sizing and context relevance
@@ -14,7 +14,7 @@ Via the `/plugin` menu in Claude Code:
 1. Select "Manage marketplaces"
 2. Add marketplace: `contextgraph/claude-code-plugin`
 3. Select "Browse and install plugins"
-4. Install `contextgraph`
+4. Install `steward`
 
 Then restart Claude Code.
 
@@ -26,7 +26,7 @@ Check that everything is working:
 /mcp
 ```
 
-You should see `contextgraph` listed as a configured MCP server.
+You should see `steward` listed as a configured MCP server.
 
 ## Features
 
@@ -119,13 +119,12 @@ After installation, Claude Code can help you:
 
 ## Web Dashboard
 
-Visit [contextgraph.dev](https://contextgraph.dev) to view and manage your actions in a visual interface.
+Visit [steward.foo](https://steward.foo) to view and manage your actions in a visual interface.
 
 ## Links
 
-- **Website**: [contextgraph.dev](https://contextgraph.dev)
-- **GitHub**: [github.com/contextgraph](https://github.com/contextgraph)
-- **MCP Server**: [mcp.contextgraph.dev](https://mcp.contextgraph.dev)
+- **Website**: [steward.foo](https://steward.foo)
+- **MCP Server**: [mcp.steward.foo](https://mcp.steward.foo)
 
 ## Version
 

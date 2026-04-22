@@ -1,13 +1,13 @@
-# ContextGraph Setup
+# Steward Setup
 
-Thank you for installing the ContextGraph plugin!
+Thank you for installing the Steward plugin!
 
 ## Complete Your Setup
 
-To connect to the ContextGraph MCP server, run this command:
+To connect to the Steward MCP server, run this command:
 
 ```bash
-claude mcp add contextgraph --transport http https://mcp.contextgraph.dev
+claude mcp add steward --transport http https://mcp.steward.foo
 ```
 
 Then restart Claude Code.
@@ -20,7 +20,7 @@ Check that the MCP server is configured:
 /mcp
 ```
 
-You should see `contextgraph` listed.
+You should see `steward` listed.
 
 ## Getting Started
 
@@ -30,11 +30,11 @@ Once connected, try:
 Create an action to implement user authentication
 ```
 
-Claude Code will use the ContextGraph MCP server to create persistent actions that survive across sessions.
+Claude Code will use the Steward MCP server to create persistent actions that survive across sessions.
 
 ## Web Dashboard
 
-View and manage your actions at: **https://contextgraph.dev**
+View and manage your actions at: **https://steward.foo**
 
 ## Need Help?
 
