@@ -3,7 +3,9 @@
 Thank you for installing the Steward plugin!
 
 The Steward MCP server is configured automatically when the plugin is
-installed. Restart Claude Code to pick it up.
+installed. Restart Claude Code to pick it up. The plugin also includes the
+`/steward:define-steward` skill for creating stewards from inside the
+repository they will watch.
 
 ## Verify Installation
 
@@ -15,6 +17,26 @@ Check that the MCP server is configured:
 
 You should see `steward` listed.
 
+Check that the skill is available:
+
+```text
+/steward:define-steward
+```
+
+If you are upgrading from an older install, update or reinstall the plugin,
+then restart Claude Code:
+
+```text
+/plugin update steward
+```
+
+If update does not pick up the new skill, uninstall and install again:
+
+```text
+/plugin uninstall steward
+/plugin install steward
+```
+
 ## Getting Started
 
 Once connected, try:
@@ -24,6 +46,28 @@ Create an action to implement user authentication
 ```
 
 Claude Code will use the Steward MCP server to create persistent actions that survive across sessions.
+
+## Create A Steward
+
+Open Claude Code in the repository you want the steward to watch, then run:
+
+```
+/steward:define-steward
+```
+
+Ask Claude to inspect the repo and preview a steward. The skill will guide
+Claude through `configure_steward` with `action: "validate"`, then
+`action: "preview"`, and only `action: "apply"` after you approve the rendered
+mission and rubric.
+
+Smoke-test prompt:
+
+```text
+/steward:define-steward
+
+Inspect this repository and call configure_steward with action="validate" for
+a draft steward. Do not apply anything yet.
+```
 
 ## Web Dashboard
 
