@@ -18,6 +18,19 @@ Via the `/plugin` menu in Claude Code:
 
 Then restart Claude Code.
 
+To update an existing install:
+
+```text
+/plugin update steward
+```
+
+If update does not pick up the new skill, reinstall:
+
+```text
+/plugin uninstall steward
+/plugin install steward
+```
+
 ### Verify Installation
 
 Check that everything is working:
@@ -28,9 +41,26 @@ Check that everything is working:
 
 You should see `steward` listed as a configured MCP server.
 
+Check that the steward definition skill is installed:
+
+```text
+/steward:define-steward
+```
+
+To smoke-test the skill and MCP tool together, open Claude Code in a repository
+that the Steward GitHub App can access and run:
+
+```text
+/steward:define-steward
+
+Inspect this repository and call configure_steward with action="validate" for
+a draft steward. Do not apply anything yet.
+```
+
 ## Features
 
 - **Persistent Action Management**: Create, update, and track actions across sessions
+- **Repository-Native Steward Definition**: Use `/steward:define-steward` to inspect a repo and create a rubric-centric steward with `configure_steward`
 - **Hierarchical Planning**: Organize work in parent-child relationships
 - **Dependency Tracking**: Manage action dependencies and execution order
 - **Semantic Search**: Find actions using natural language queries
@@ -52,6 +82,13 @@ Once installed, Claude Code can use these tools:
 - `suggest_parent` - Get AI-powered parent suggestions
 - `parse_plan` - Convert unstructured text into structured actions
 - `fetch_tree` - View hierarchical action trees
+- `configure_steward` - Validate, preview, create, or update rubric-centric stewards
+
+## Skills Available
+
+Plugin skills are namespaced by Claude Code as `/steward:<skill-name>`.
+
+- `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, then apply it after user approval.
 
 ## Agent-Ready Status
 
@@ -117,6 +154,12 @@ After installation, Claude Code can help you:
    Mark action [id] as complete with the changes we just made
    ```
 
+4. **Create a repository-native steward**:
+   ```text
+   /steward:define-steward
+   ```
+   Then ask Claude to inspect the current repo and preview a steward.
+
 ## Web Dashboard
 
 Visit [steward.foo](https://steward.foo) to view and manage your actions in a visual interface.
@@ -128,7 +171,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.9.3
+Current version: 0.9.4
 
 ## License
 

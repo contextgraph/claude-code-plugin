@@ -1,7 +1,7 @@
 {
   "name": "steward",
-  "version": "0.9.3",
-  "description": "A living planning layer that gets smarter with every execution. Steward transforms vibe-like ideas into executable plans that improve themselves.",
+  "version": "0.9.4",
+  "description": "A living planning layer with MCP tools and skills for defining repository-native stewards from Claude Code.",
   "author": {
     "name": "steward",
     "email": "ben.nevile@gmail.com"
