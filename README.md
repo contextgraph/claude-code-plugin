@@ -155,7 +155,7 @@ After installation, Claude Code can help you:
    ```
 
 4. **Create a repository-native steward**:
-   ```
+   ```text
    /steward:define-steward
    ```
    Then ask Claude to inspect the current repo and preview a steward.

@@ -51,7 +51,7 @@ Claude Code will use the Steward MCP server to create persistent actions that su
 
 Open Claude Code in the repository you want the steward to watch, then run:
 
-```
+```text
 /steward:define-steward
 ```
 
