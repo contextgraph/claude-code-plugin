@@ -59,8 +59,9 @@ To work the current top Steward backlog item end-to-end, run:
 /steward:work-top-backlog-item
 ```
 
-Then ask Claude Code to claim the top item, prepare the worktree, open a linked
-PR, and keep addressing checks and review comments until the PR is merge-ready.
+Then ask Claude Code to claim the top item with the Steward MCP server, prepare
+the registered branch/worktree, open the PR from that branch, and keep
+addressing checks and review comments until the PR is merge-ready.
 
 ## Create A Steward
 
