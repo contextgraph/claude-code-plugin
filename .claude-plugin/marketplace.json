@@ -5,13 +5,13 @@
     "email": "ben.nevile@gmail.com"
   },
   "description": "A living planning layer with MCP tools and skills for Claude Code",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "plugins": [
     {
       "name": "steward",
       "source": "./plugins/steward",
       "description": "A living planning layer with MCP tools and skills for defining repository-native stewards from Claude Code.",
-      "version": "0.9.4",
+      "version": "0.9.5",
       "author": {
         "name": "steward",
         "email": "ben.nevile@gmail.com"

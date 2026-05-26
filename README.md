@@ -57,10 +57,21 @@ Inspect this repository and call configure_steward with action="validate" for
 a draft steward. Do not apply anything yet.
 ```
 
+To test the full steward creation path, use:
+
+```text
+/steward:define-steward
+
+Inspect this repository, draft a narrow steward, preview it, and ask before
+creating it. If I approve creation, continue through inventory reconciliation
+and initialization preview before asking for final approval to save
+initialization artifacts.
+```
+
 ## Features
 
 - **Persistent Action Management**: Create, update, and track actions across sessions
-- **Repository-Native Steward Definition**: Use `/steward:define-steward` to inspect a repo and create a rubric-centric steward with `configure_steward`
+- **Repository-Native Steward Definition**: Use `/steward:define-steward` to inspect a repo, create a rubric-centric steward with `configure_steward`, reconcile inventory, and initialize the steward from Claude Code
 - **Hierarchical Planning**: Organize work in parent-child relationships
 - **Dependency Tracking**: Manage action dependencies and execution order
 - **Semantic Search**: Find actions using natural language queries
@@ -88,7 +99,7 @@ Once installed, Claude Code can use these tools:
 
 Plugin skills are namespaced by Claude Code as `/steward:<skill-name>`.
 
-- `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, then apply it after user approval.
+- `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, apply it after user approval, then reconcile inventory and initialize the steward from the coding agent.
 
 ## Agent-Ready Status
 
@@ -171,7 +182,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.9.4
+Current version: 0.9.5
 
 ## License
 

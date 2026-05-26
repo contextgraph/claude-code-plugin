@@ -1,6 +1,6 @@
 ---
 name: define-steward
-description: Use when defining, previewing, creating, or updating a steward for a repository through the Steward MCP server. Inspect the codebase, draft a narrow rubric-centric steward spec, validate and preview it with configure_steward, and apply it only after user approval.
+description: Use when defining, previewing, creating, activating, or updating a steward for a repository through the Steward MCP server. Inspect the codebase, draft a narrow rubric-centric steward spec, validate and preview it with configure_steward, apply it only after user approval, then reconcile inventory and initialization artifacts from the coding agent.
 ---
 
 # Define Steward
@@ -9,7 +9,7 @@ Use this skill when the user wants a new steward or wants to revise an existing 
 
 The Steward MCP server must be connected. If the `configure_steward` tool is not available, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it.
 
-A steward is an AI agent with one zone of concern. Every other artifact - its mission, review lens, backlog, metrics, and notes - is generated from a small structured steward spec: an ownership zone, a rubric of 4-7 dimensions, and a thin layer of inventory, metric, and evidence anchors. The `configure_steward` MCP tool is the only path that writes a steward.
+A steward is an AI agent with one zone of concern. Every other artifact - its mission, review lens, backlog, metrics, notes, and first actions - starts from a small structured steward spec: an ownership zone, a rubric of 4-7 dimensions, and a thin layer of inventory, metric, and evidence anchors. The `configure_steward` MCP tool is the only path that writes a steward, and the coding agent owns the post-create activation work.
 
 ## Workflow
 
@@ -20,7 +20,12 @@ A steward is an AI agent with one zone of concern. Every other artifact - its mi
 5. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
 6. Ask for approval before writing.
 7. Call `configure_steward` with `action: "apply"` only after approval.
-8. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
+8. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
+9. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
+10. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
+11. Ask for approval before saving initialization artifacts.
+12. Call `configure_steward` with `action: "apply_initialization"` only after approval.
+13. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
 
 If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, metrics, or evidence.
 
@@ -58,13 +63,69 @@ Avoid:
 
 ## Inventory, Metrics, And Evidence
 
-These slots ground the steward in real artifacts and are written only on creation. Update mode cannot edit them.
+These slots ground the steward in real artifacts. The create step seeds the durable artifact shells; after creation, the coding agent reconciles the actual inventory contents and writes the first initialization note and backlog items through activation actions. Update mode cannot edit inventory, metrics, or evidence.
 
-Inventory is optional and at most one item. It is the durable list this steward maintains and re-reads on every heartbeat. Good examples: "Analytics event catalog", "External API surface", "Cron job registry", "Public route inventory". Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`.
+Inventory is optional and at most one item. It is the durable list this steward maintains and re-reads on every heartbeat. Good examples: "Analytics event catalog", "External API surface", "Cron job registry", "Public route inventory". Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
 
 Metrics are measurable health signals. Anchor each metric to a single rubric dimension by exact name in `dimension_name`. Avoid unmeasurable metrics such as "Developer happiness" and avoid metrics that only recount inventory size.
 
 Evidence is a short list of repository-specific anchors. Each line names a real file, workflow, or recurring issue. Five or fewer is plenty. If you cannot list two or three pieces of concrete evidence, the steward is probably too speculative.
+
+## Activation Actions
+
+Creation is not complete when `action: "apply"` returns. The returned `activation.next_action` tells you what to do next.
+
+If the next action is `reconcile_inventory`, call:
+
+```json
+{
+  "action": "reconcile_inventory",
+  "steward": { "id": "created-steward-uuid" },
+  "inventory": {
+    "inventory_id": "inventory-uuid-from-activation",
+    "entries": [
+      {
+        "key": "stable-entry-key",
+        "value": {
+          "name": "Human-readable entry name",
+          "description": "Why this belongs in the steward's durable inventory.",
+          "paths": ["path/to/file.ts"],
+          "dimension_names": ["Dimension one"]
+        }
+      }
+    ],
+    "summary": "What was reconciled and what the steward should remember."
+  }
+}
+```
+
+Use stable keys that will still make sense after files move. Prefer keys such as route names, event names, API names, workflow names, or component names over raw file paths. Do not send duplicate keys.
+
+After inventory reconciliation, or immediately after create when there is no inventory, draft initialization artifacts and call:
+
+```json
+{
+  "action": "preview_initialization",
+  "steward": { "id": "created-steward-uuid" },
+  "initialization": {
+    "report": "A repository-grounded initialization note of at least 100 characters. Explain what you inspected, what the steward now owns, what evidence supports the domain, and what future work it should watch.",
+    "backlog_items": [
+      {
+        "repository_url": "https://github.com/owner/repo",
+        "title": "Concrete first action",
+        "objective": "What should change or be checked.",
+        "rationale": "Why this matters for the steward's domain.",
+        "file_paths": ["path/to/file.ts"],
+        "priority_category": "should"
+      }
+    ]
+  }
+}
+```
+
+Show the preview to the user. After approval, call the same payload with `action: "apply_initialization"`.
+
+Backlog items must be specific and grounded in files the agent inspected. Use `must`, `should`, or `could` for `priority_category`. Zero backlog items is acceptable when the steward is ready but there is no honest first action.
 
 ## Spec Contract
 
@@ -212,7 +273,7 @@ Evidence is a short list of repository-specific anchors. Each line names a real 
 }
 ```
 
-Update mode can change identity, repository scope, ownership zone, rubric dimensions, and status. It refuses `inventory`, `metrics`, and `evidence`; those are seeded only on create.
+Update mode can change identity, repository scope, ownership zone, rubric dimensions, and status. It refuses `inventory`, `metrics`, and `evidence`; those belong to create and activation flows.
 
 ## Guardrails
 
@@ -220,6 +281,8 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 - Replace every handoff marker before validation or preview. A value like `contextgraph/<repo-name-needed>` is a hint, not a valid spec.
 - Keep dimension names stable; inventory and metric anchors match names exactly.
 - Include `inventory`, `metrics`, and `evidence` only when creating a steward. Omit them for update mode.
+- After creating a steward, follow the returned `activation.next_action` until it is `done`.
+- Do not skip initialization. If inventory or initialization feels uncertain, inspect more repository evidence before previewing.
 - If the tool asks for workspace disambiguation, use `repository` first. Use `workspace_id` only when supplied by the product page or user.
 - Do not apply a steward that the user has not approved.
 - If the user asks for a steward outside the inspected repo's real work, say what evidence is missing and preview a narrower alternative.
