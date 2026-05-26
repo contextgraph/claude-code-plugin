@@ -117,17 +117,23 @@ Use the exact `workspace.slug` from `prepare_steward_onboarding` and `steward.id
 
 ## Closing The Flow
 
-After initialization artifacts are saved, do not end with only a success message. Encourage the user to keep momentum with two concrete choices:
+After initialization artifacts are saved, do not end with only a success message. Include the direct steward page link and offer four concrete next steps:
 
 ```text
 This steward is ready: https://www.steward.foo/<workspace-slug>/stewards/<steward-id>
 
-Want to take one of its new backlog items next, or define another steward for a different part of the repo?
+Good next steps:
+1. Work one of its new backlog items.
+2. Define another steward for a different part of the repo.
+3. Update CLAUDE.md so Claude runs steward_review after each commit and before pushing.
+4. Update CLAUDE.md or relevant skills so Claude uses consult for steward advice before implementation starts.
 ```
 
-If `/steward:work-top-backlog-item` is available, mention it as the fastest path for the first option. If that skill is not available, offer to inspect the new backlog items and help choose one manually.
+If `/steward:work-top-backlog-item` is available, mention it as the fastest path for working the first backlog item. If that skill is not available, offer to inspect the new backlog items and help choose one manually.
 
 If the user wants to define another steward, restart this skill from the beginning and preserve the same principle: ask whether they already have a zone or want repository-grounded suggestions.
+
+If the user wants to update CLAUDE.md or skills, inspect the repository instructions first and propose a narrow patch. For steward_review guidance, instruct Claude to run it on relevant commits or diffs after local changes and before push. For consult guidance, instruct Claude to ask the relevant stewards for advice before implementation when work touches an active steward domain.
 
 ## Rubric Architecture
 
