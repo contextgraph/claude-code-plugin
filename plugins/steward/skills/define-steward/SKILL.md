@@ -40,7 +40,7 @@ When the user has not provided an explicit steward zone, ask one short question 
 Do you already have a stewardship zone in mind, or should I inspect the repository and suggest a few narrow options?
 ```
 
-If the user provides a zone, inspect the repository to ground that zone before drafting. If the user asks for suggestions, inspect first, then offer 3-5 narrow options with one-line evidence for each. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
+If the user provides a zone, inspect the repository to ground that zone before drafting. If the user asks for suggestions, inspect first, then offer three narrow options with one-line evidence for each. Four options is the hard maximum when the repository genuinely has four strong candidate zones. Never present five or more options in one question or structured choice menu; Claude Code rejects question menus with too many options. If you find more than four plausible zones, show the best three or four and say you can inspect more if none fit. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
 
 ## Workflow
 
