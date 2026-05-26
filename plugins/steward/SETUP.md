@@ -3,19 +3,26 @@
 Thank you for installing the Steward plugin!
 
 The Steward MCP server is configured automatically when the plugin is
-installed. Restart Claude Code to pick it up. The plugin also includes the
+installed. Reload plugins to pick it up:
+
+```text
+/reload-plugins
+```
+
+The plugin also includes the
 `/steward:define-steward` skill for creating stewards from inside the
 repository they will watch.
 
 ## Verify Installation
 
-Check that the MCP server is configured:
+Check that the MCP server is connected and authenticated:
 
 ```bash
 /mcp
 ```
 
-You should see `steward` listed.
+You should see `steward` listed. Complete the browser authentication handoff if
+Claude Code prompts for it.
 
 Check that the skill is available:
 
@@ -65,7 +72,8 @@ addressing checks and review comments until the PR is merge-ready.
 
 ## Create A Steward
 
-Open Claude Code in the repository you want the steward to watch, then run:
+Open Claude Code in the repository you want the steward to watch. Confirm
+`/mcp` shows the `steward` server is authenticated, then run:
 
 ```text
 /steward:define-steward

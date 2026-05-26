@@ -40,11 +40,12 @@ When the user has not provided an explicit steward zone, ask one short question 
 Do you already have a stewardship zone in mind, or should I inspect the repository and suggest a few narrow options?
 ```
 
-If the user provides a zone, inspect the repository to ground that zone before drafting. If the user asks for suggestions, inspect first, then offer 3-5 narrow options with one-line evidence for each. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
+If the user provides a zone, inspect the repository to ground that zone before drafting. If the user asks for suggestions, inspect first, then offer three narrow options with one-line evidence for each. Four options is the hard maximum when the repository genuinely has four strong candidate zones. Never present five or more options in one question or structured choice menu; Claude Code rejects question menus with too many options. If you find more than four plausible zones, show the best three or four and say you can inspect more if none fit. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
 
 ## Workflow
 
 1. Call `prepare_steward_onboarding` for the current repository and complete any returned setup handoff before continuing.
+   Keep the resolved workspace slug from the readiness response. You will use it later to link the user directly to the steward page.
 2. Check existing stewards when `list_stewards` is available. If there are none, give the short first-steward orientation above.
 3. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
 4. Inspect the repository before drafting anything.
@@ -52,9 +53,9 @@ If the user provides a zone, inspect the repository to ground that zone before d
 6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
 7. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
 8. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
-9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
+9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, metric anchors, and the short operating model described below.
 10. Ask for approval in natural language before writing.
-11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
+11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward. After a successful create, show the direct steward page link using the resolved workspace slug and returned steward id.
 12. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
 13. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory and metric measurability.
 14. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
@@ -88,6 +89,14 @@ After the steward preview, ask something like:
 Does this seem right? Any questions or adjustments before I create this steward?
 ```
 
+Before asking that approval question, briefly explain what this steward will do after initialization:
+
+- Vigilance: it reviews every relevant PR or commit through this rubric and raises concerns when the zone is at risk.
+- Mapping: it surveys the files, workflows, and recurring issues inside its zone, maintains its inventory, and reports regularly as the landscape changes.
+- Advisor: it is available for focused consultation and chat when the user wants judgment about this domain.
+
+Keep this operating model to three short bullets. Tie each bullet to the concrete steward being previewed rather than describing stewards generically.
+
 After the initialization preview, ask something like:
 
 ```text
@@ -96,17 +105,35 @@ Does this initialization plan look right? Any changes before I save the note and
 
 If the user says yes, go ahead, looks good, create it, save it, or similar, treat that as approval. If the user asks a question or requests a change, answer or revise before calling the write action.
 
-## Closing The Flow
+## Steward Page Link
 
-After initialization artifacts are saved, do not end with only a success message. Encourage the user to keep momentum with two concrete choices:
+After `configure_steward` with `action: "apply"` succeeds, build the direct steward page URL from the resolved workspace slug and returned steward id:
 
 ```text
-This steward is ready. Want to take one of its new backlog items next, or define another steward for a different part of the repo?
+https://www.steward.foo/<workspace-slug>/stewards/<steward-id>
 ```
 
-If `/steward:work-top-backlog-item` is available, mention it as the fastest path for the first option. If that skill is not available, offer to inspect the new backlog items and help choose one manually.
+Use the exact `workspace.slug` from `prepare_steward_onboarding` and `steward.id` from the `configure_steward` response. Include this link in the creation success message and again after initialization artifacts are saved. If the workspace slug is unavailable, do not invent one; say that the steward is available in the Steward dashboard and include the steward id.
+
+## Closing The Flow
+
+After initialization artifacts are saved, do not end with only a success message. Include the direct steward page link and offer four concrete next steps:
+
+```text
+This steward is ready: https://www.steward.foo/<workspace-slug>/stewards/<steward-id>
+
+Good next steps:
+1. Work one of its new backlog items.
+2. Define another steward for a different part of the repo.
+3. Update CLAUDE.md so Claude runs steward_review after each commit and before pushing.
+4. Update CLAUDE.md or relevant skills so Claude uses consult for steward advice before implementation starts.
+```
+
+If `/steward:work-top-backlog-item` is available, mention it as the fastest path for working the first backlog item. If that skill is not available, offer to inspect the new backlog items and help choose one manually.
 
 If the user wants to define another steward, restart this skill from the beginning and preserve the same principle: ask whether they already have a zone or want repository-grounded suggestions.
+
+If the user wants to update CLAUDE.md or skills, inspect the repository instructions first and propose a narrow patch. For steward_review guidance, instruct Claude to run it on relevant commits or diffs after local changes and before push. For consult guidance, instruct Claude to ask the relevant stewards for advice before implementation when work touches an active steward domain.
 
 ## Rubric Architecture
 
@@ -134,13 +161,21 @@ These slots ground the steward in real artifacts. The create step seeds the dura
 
 Inventory is optional and at most one item. It is the durable list this steward maintains and re-reads on every heartbeat. Good examples: "Analytics event catalog", "External API surface", "Cron job registry", "Public route inventory". Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
 
-Metrics are measurable health signals. Anchor each metric to a single rubric dimension by exact name in `dimension_name`. Avoid unmeasurable metrics such as "Developer happiness" and avoid metrics that only recount inventory size.
+Metrics are measurable health signals that let the steward answer "are we improving?" for one rubric dimension over time. Anchor each metric to a single rubric dimension by exact name in `dimension_name`. Avoid unmeasurable metrics such as "Developer happiness" and avoid metrics that only recount inventory size.
 
 Treat the `integration` response as the account capability source of truth. Use an available source only when the query or endpoint is grounded in real repository or provider evidence; treat unavailable provider sources as unavailable even if the repository imports that vendor, uses that vendor for internal logging, or contains old scripts that mention it.
 
 If the source needed for a metric is unavailable, mark the metric as `needs_instrumentation` and make the missing capability explicit. Do not implement provider setup scripts, seed scripts, local CLI assumptions, or direct database writes just to make the metric look configured. Instead, ask the user to choose one path: connect the integration, add product instrumentation, or expose a first-party measurement endpoint that returns `{"value": number}`.
 
 Only include currently sampleable metrics in `spec.metrics`. A metric is sampleable now only when the agent can name the available source and the concrete query or endpoint that returns a numeric value. Aspirational metrics belong in initialization backlog items until a real sampling path exists.
+
+When no metrics are sampleable yet, explain this in user terms:
+
+- Metrics exist so the steward can track whether its zone is improving, not just describe concerns.
+- A metric becomes active only when Steward can read a numeric value from a connected provider, product instrumentation, or a first-party JSON endpoint.
+- Candidate metrics are useful now because they become concrete backlog items for adding that measurement path.
+
+Do not lead with a list of unavailable providers unless it is directly relevant to the user's repo. Most users will not use every supported provider, so focus on the practical paths: connect an existing measurement provider, add product instrumentation, or expose a small repository-owned endpoint that returns the number.
 
 Evidence is a short list of repository-specific anchors. Each line names a real file, workflow, or recurring issue. Five or fewer is plenty. If you cannot list two or three pieces of concrete evidence, the steward is probably too speculative.
 
@@ -188,6 +223,7 @@ Metric review:
 - List each metric included in the steward spec and why it is sampleable now.
 - Name the measurement source and query or endpoint for each sampleable metric.
 - List candidate metrics that need instrumentation and the exact missing source.
+- If none are sampleable, explain why metrics matter, what makes a metric sampleable, and how the candidate metrics will turn into actionable setup backlog items.
 - Convert each needs instrumentation metric into a concrete initialization backlog item instead of keeping it in `spec.metrics`.
 
 After inventory reconciliation, or immediately after create when there is no inventory, draft initialization artifacts and call:
