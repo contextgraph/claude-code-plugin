@@ -53,14 +53,15 @@ Check that the backlog execution skill is installed:
 /steward:work-top-backlog-item
 ```
 
-To smoke-test the skill and MCP tool together, open Claude Code in a repository
-that the Steward GitHub App can access and run:
+To smoke-test the skill and MCP tool together, open Claude Code in the repository
+you want the steward to watch and run:
 
 ```text
 /steward:define-steward
 
-Inspect this repository and call configure_steward with action="validate" for
-a draft steward. Do not create or update anything yet.
+Run the steward onboarding preflight for this repository, then inspect this
+repository and call configure_steward with action="validate" for a draft
+steward. Do not create or update anything yet.
 ```
 
 To test the full steward creation path, use:
@@ -100,6 +101,8 @@ Once installed, Claude Code can use these tools:
 - `suggest_parent` - Get AI-powered parent suggestions
 - `parse_plan` - Convert unstructured text into structured actions
 - `fetch_tree` - View hierarchical action trees
+- `prepare_steward_onboarding` - Check MCP auth, workspace resolution, and GitHub App repository access before defining a steward
+- `integration` - Inspect workspace integration status and metric measurement capabilities
 - `configure_steward` - Validate, preview, create, or update rubric-centric stewards
 - `manage_backlog_work` - Consolidated Steward backlog execution lifecycle tool: peek, claim, release, or dismiss item/group work
 - `list_steward_backlog_items` - List backlog items for a steward with optional state filtering
@@ -194,7 +197,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.9.13
+Current version: 0.9.14
 
 ## License
 
