@@ -1,6 +1,6 @@
 {
   "name": "steward",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "A living planning layer with MCP tools and skills for defining repository-native stewards from Claude Code.",
   "author": {
     "name": "steward",
