@@ -7,13 +7,23 @@ description: Use when defining, previewing, creating, activating, or updating a 
 
 Use this skill when the user wants a new steward or wants to revise an existing steward. The goal is not to fill out a form. The goal is to define a narrow judgment lens that feels native to this repository and this user's work.
 
-The Steward MCP server must be connected. If the `configure_steward` tool is not available, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it.
+The Steward MCP server must be connected. If `prepare_steward_onboarding` or `configure_steward` is not available, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it.
 
 A steward is an AI agent with one zone of concern. Every other artifact - its mission, review lens, backlog, metrics, notes, and first actions - starts from a small structured steward spec: an ownership zone, a rubric of 4-7 dimensions, and a thin layer of inventory, metric, and evidence anchors. The `configure_steward` MCP tool is the only path that writes a steward, and the coding agent owns the post-create activation work.
 
 ## Start Here
 
-When this skill starts, first determine whether this is likely the user's first steward. If the `list_stewards` MCP tool is available, call it once for the current workspace or repository context. If the user has zero stewards, treat the workflow as onboarding, not just data entry.
+When this skill starts, first identify the current repository from the local git remote and call `prepare_steward_onboarding` with the concrete `owner/repo` slug.
+
+Handle the response before doing any steward drafting:
+
+- If `next_action` is `authenticate_mcp`, tell the user to complete the Claude Code MCP authentication browser handoff, then call `prepare_steward_onboarding` again.
+- If `next_action` is `install_github_app`, give the user the returned install URL. After the browser handoff, return to Claude Code and call `prepare_steward_onboarding` again.
+- If `next_action` is `choose_workspace`, call `prepare_steward_onboarding` again with the workspace selector requested by the response.
+- If `next_action` is `fix_repository_access`, explain the reported access problem and stop until the user fixes it.
+- If `next_action` is `define_steward`, continue in Claude Code. Do not send the user back through web onboarding.
+
+After setup is ready, determine whether this is likely the user's first steward. If the `list_stewards` MCP tool is available, call it once for the current workspace or repository context. If the user has zero stewards, treat the workflow as onboarding, not just data entry.
 
 For a first steward, briefly explain the model before asking for a zone:
 
@@ -34,24 +44,25 @@ If the user provides a zone, inspect the repository to ground that zone before d
 
 ## Workflow
 
-1. Check existing stewards when `list_stewards` is available. If there are none, give the short first-steward orientation above.
-2. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
-3. Inspect the repository before drafting anything.
-4. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
-5. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
-6. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
-7. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
-8. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
-9. Ask for approval in natural language before writing.
-10. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
-11. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
-12. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory and metric measurability.
-13. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
-14. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
-15. Ask for approval in natural language before saving initialization artifacts.
-16. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
-17. End by offering two next steps: work one of the new backlog items, or define another steward.
-18. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
+1. Call `prepare_steward_onboarding` for the current repository and complete any returned setup handoff before continuing.
+2. Check existing stewards when `list_stewards` is available. If there are none, give the short first-steward orientation above.
+3. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
+4. Inspect the repository before drafting anything.
+5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
+6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
+7. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
+8. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
+9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
+10. Ask for approval in natural language before writing.
+11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
+12. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
+13. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory and metric measurability.
+14. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
+15. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
+16. Ask for approval in natural language before saving initialization artifacts.
+17. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
+18. End by offering two next steps: work one of the new backlog items, or define another steward.
+19. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
 
 If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, metrics, or evidence.
 

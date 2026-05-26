@@ -72,7 +72,7 @@ Open Claude Code in the repository you want the steward to watch, then run:
 ```
 
 Ask Claude to inspect the repo and preview a steward. The skill will guide
-Claude through `configure_steward` with `action: "validate"`, then
+Claude through `prepare_steward_onboarding`, then `configure_steward` with `action: "validate"`, then
 `action: "preview"`, and only create it after you approve the rendered
 mission and rubric. After creation, Claude will continue the activation flow in
 the coding agent by reconciling inventory, previewing initialization artifacts,
