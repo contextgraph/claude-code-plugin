@@ -72,10 +72,10 @@ Open Claude Code in the repository you want the steward to watch, then run:
 
 Ask Claude to inspect the repo and preview a steward. The skill will guide
 Claude through `configure_steward` with `action: "validate"`, then
-`action: "preview"`, and only `action: "apply"` after you approve the rendered
+`action: "preview"`, and only create it after you approve the rendered
 mission and rubric. After creation, Claude will continue the activation flow in
 the coding agent by reconciling inventory, previewing initialization artifacts,
-and applying those artifacts only after you approve them.
+and saving those artifacts only after you approve them.
 
 Smoke-test prompt:
 
@@ -83,7 +83,7 @@ Smoke-test prompt:
 /steward:define-steward
 
 Inspect this repository and call configure_steward with action="validate" for
-a draft steward. Do not apply anything yet.
+a draft steward. Do not create or update anything yet.
 ```
 
 End-to-end test prompt:
