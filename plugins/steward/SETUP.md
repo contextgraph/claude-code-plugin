@@ -23,6 +23,12 @@ Check that the skill is available:
 /steward:define-steward
 ```
 
+Check that the backlog execution skill is available:
+
+```text
+/steward:work-top-backlog-item
+```
+
 If you are upgrading from an older install, update or reinstall the plugin,
 then restart Claude Code:
 
@@ -46,6 +52,15 @@ Create an action to implement user authentication
 ```
 
 Claude Code will use the Steward MCP server to create persistent actions that survive across sessions.
+
+To work the current top Steward backlog item end-to-end, run:
+
+```text
+/steward:work-top-backlog-item
+```
+
+Then ask Claude Code to claim the top item, prepare the worktree, open a linked
+PR, and keep addressing checks and review comments until the PR is merge-ready.
 
 ## Create A Steward
 
