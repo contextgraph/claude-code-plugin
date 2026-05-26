@@ -142,13 +142,21 @@ These slots ground the steward in real artifacts. The create step seeds the dura
 
 Inventory is optional and at most one item. It is the durable list this steward maintains and re-reads on every heartbeat. Good examples: "Analytics event catalog", "External API surface", "Cron job registry", "Public route inventory". Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
 
-Metrics are measurable health signals. Anchor each metric to a single rubric dimension by exact name in `dimension_name`. Avoid unmeasurable metrics such as "Developer happiness" and avoid metrics that only recount inventory size.
+Metrics are measurable health signals that let the steward answer "are we improving?" for one rubric dimension over time. Anchor each metric to a single rubric dimension by exact name in `dimension_name`. Avoid unmeasurable metrics such as "Developer happiness" and avoid metrics that only recount inventory size.
 
 Treat the `integration` response as the account capability source of truth. Use an available source only when the query or endpoint is grounded in real repository or provider evidence; treat unavailable provider sources as unavailable even if the repository imports that vendor, uses that vendor for internal logging, or contains old scripts that mention it.
 
 If the source needed for a metric is unavailable, mark the metric as `needs_instrumentation` and make the missing capability explicit. Do not implement provider setup scripts, seed scripts, local CLI assumptions, or direct database writes just to make the metric look configured. Instead, ask the user to choose one path: connect the integration, add product instrumentation, or expose a first-party measurement endpoint that returns `{"value": number}`.
 
 Only include currently sampleable metrics in `spec.metrics`. A metric is sampleable now only when the agent can name the available source and the concrete query or endpoint that returns a numeric value. Aspirational metrics belong in initialization backlog items until a real sampling path exists.
+
+When no metrics are sampleable yet, explain this in user terms:
+
+- Metrics exist so the steward can track whether its zone is improving, not just describe concerns.
+- A metric becomes active only when Steward can read a numeric value from a connected provider, product instrumentation, or a first-party JSON endpoint.
+- Candidate metrics are useful now because they become concrete backlog items for adding that measurement path.
+
+Do not lead with a list of unavailable providers unless it is directly relevant to the user's repo. Most users will not use every supported provider, so focus on the practical paths: connect an existing measurement provider, add product instrumentation, or expose a small repository-owned endpoint that returns the number.
 
 Evidence is a short list of repository-specific anchors. Each line names a real file, workflow, or recurring issue. Five or fewer is plenty. If you cannot list two or three pieces of concrete evidence, the steward is probably too speculative.
 
@@ -196,6 +204,7 @@ Metric review:
 - List each metric included in the steward spec and why it is sampleable now.
 - Name the measurement source and query or endpoint for each sampleable metric.
 - List candidate metrics that need instrumentation and the exact missing source.
+- If none are sampleable, explain why metrics matter, what makes a metric sampleable, and how the candidate metrics will turn into actionable setup backlog items.
 - Convert each needs instrumentation metric into a concrete initialization backlog item instead of keeping it in `spec.metrics`.
 
 After inventory reconciliation, or immediately after create when there is no inventory, draft initialization artifacts and call:
