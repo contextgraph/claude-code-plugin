@@ -101,7 +101,7 @@ Once installed, Claude Code can use these tools:
 - `parse_plan` - Convert unstructured text into structured actions
 - `fetch_tree` - View hierarchical action trees
 - `configure_steward` - Validate, preview, create, or update rubric-centric stewards
-- `manage_backlog_work` - Manage Steward backlog execution lifecycle actions: peek, claim, release, or dismiss
+- `manage_backlog_work` - Consolidated Steward backlog execution lifecycle tool: peek, claim, release, or dismiss item/group work
 - `list_steward_backlog_items` - List backlog items for a steward with optional state filtering
 - `create_steward_backlog_item` - Create a new backlog item for a steward
 - `update_steward_backlog_item` - Update a steward backlog item title, objective, rationale, or priority
@@ -111,7 +111,7 @@ Once installed, Claude Code can use these tools:
 Plugin skills are namespaced by Claude Code as `/steward:<skill-name>`.
 
 - `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, create or update it after user approval, then reconcile inventory and initialize the steward from the coding agent.
-- `/steward:work-top-backlog-item` - Use the Steward MCP server to claim the top backlog item, set up the correct local branch/worktree, implement the work, open a linked PR, and continue through checks and review comments until the PR is merge-ready.
+- `/steward:work-top-backlog-item` - Use the Steward MCP server to claim the top backlog item, set up the registered branch/worktree, implement the work, open a PR linked by that branch, and continue through checks and review comments until the PR is merge-ready.
 
 ## Agent-Ready Status
 
@@ -194,7 +194,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.9.10
+Current version: 0.9.11
 
 ## License
 

@@ -7,7 +7,7 @@ description: Use when the user wants Claude Code to work the top Steward backlog
 
 Use this skill when the user asks to work the next/top Steward backlog item, run the Steward queue, or continue a claimed Steward backlog PR until it is merge-ready.
 
-The Steward MCP server must be connected. If Steward MCP tools are unavailable, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it. Use the Steward CLI only as a fallback for local workspace helpers such as `steward backlog setup` or legacy PR-link recovery. The GitHub CLI must be available and authenticated for PR creation, checks, and review inspection.
+The Steward MCP server must be connected. If Steward MCP tools are unavailable, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it. Use the Steward CLI only as a fallback for local workspace helpers such as `steward backlog setup`; do not use it for Steward backlog lifecycle state. The GitHub CLI must be available and authenticated for PR creation, checks, and review inspection.
 
 ## Steward MCP Tools
 
@@ -17,6 +17,8 @@ Use `manage_backlog_work` as the normal Steward execution lifecycle tool:
 - `action: "claim"` - claim top eligible work for a repository scope and register the branch that will be pushed.
 - `action: "release"` - unclaim work when pausing or abandoning before completion.
 - `action: "dismiss"` - dismiss obsolete, impossible, or unsafe work with an evidence-backed reason.
+
+`dismiss` accepts a backlog item identifier or a backlog group identifier. Item dismiss responses return `result: "dismissed"`, `target_type: "item"`, `backlog_item_id`, and `steward_id`. Group dismiss responses return `result: "dissolved"`, `target_type: "group"`, and `group_id`.
 
 Use `list_steward_backlog_items`, `update_steward_backlog_item`, and `create_steward_backlog_item` only for steward maintenance outside the normal execution lifecycle.
 
@@ -29,7 +31,7 @@ The MCP surface does not create local git worktrees or open GitHub PRs. Use git 
 - Use the branch returned by `manage_backlog_work`; it is the claim target expected by Steward.
 - Use `steward backlog setup` when available to create the local worktree for an already-claimed item. If you create the worktree manually, use the exact claimed branch.
 - Do not abandon a claimed item silently. If the item is invalid, dismiss it with a concrete note. If you must pause or cannot continue, unclaim it with a concrete note to the user.
-- Keep the PR linked to the backlog item through the registered claim branch. If the PR is opened from another branch, include the Steward backlog marker from the claim response in the PR body or use the CLI fallback `steward backlog link-pr`.
+- Keep the PR linked to the backlog item through the registered claim branch. Open and push the PR from that exact branch.
 - Continue after the PR is open. Do not stop at PR creation unless the user explicitly asks you to stop there.
 
 ## Workflow
@@ -56,7 +58,7 @@ The MCP surface does not create local git worktrees or open GitHub PRs. Use git 
 }
 ```
 
-6. Read the claim response carefully. Capture the backlog identifier/reference, steward, repository URL, objective, rationale, registered branch, and any PR body marker.
+6. Read the claim response carefully. Capture the backlog identifier/reference, steward, repository URL, objective, rationale, and registered branch.
 7. Fetch the target repository: `git fetch origin`.
 8. Prepare the local workspace using the exact registered branch. Prefer the CLI helper when available:
 
@@ -72,13 +74,7 @@ Use `--path <path>` only when the user requested a specific location. Use `--in-
 13. Open a PR targeting `main`. The PR body must include:
     - concise summary
     - validation results
-    - the Steward backlog marker if branch-based linking is not guaranteed
-14. Verify the PR is linked to the backlog item. If not, use the CLI fallback:
-
-```bash
-steward backlog link-pr <backlog-id-or-reference> --pr <pr-number-or-url>
-```
-
+14. Verify the PR head branch is the registered claim branch. Branch matching is the Steward backlog link.
 15. Monitor the PR until merge-ready:
     - Use `gh pr checks --watch` or repeated `gh pr checks` for CI.
     - Use `gh pr view --comments --json reviews,comments,reviewDecision,mergeStateStatus,statusCheckRollup` for review state.

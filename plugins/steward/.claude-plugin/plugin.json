@@ -1,6 +1,6 @@
 {
   "name": "steward",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "description": "Repository-native steward definition and activation for Claude Code.",
   "author": {
     "name": "steward",
