@@ -16,7 +16,11 @@ Via the `/plugin` menu in Claude Code:
 3. Select "Browse and install plugins"
 4. Install `steward`
 
-Then restart Claude Code.
+Then reload plugins:
+
+```text
+/reload-plugins
+```
 
 To update an existing install:
 
@@ -33,13 +37,14 @@ If update does not pick up the new skill, reinstall:
 
 ### Verify Installation
 
-Check that everything is working:
+Check that the Steward MCP server is connected and authenticated:
 
 ```bash
 /mcp
 ```
 
-You should see `steward` listed as a configured MCP server.
+You should see `steward` listed as a configured MCP server. Complete the
+browser authentication handoff if Claude Code prompts for it.
 
 Check that the steward definition skill is installed:
 
@@ -53,8 +58,9 @@ Check that the backlog execution skill is installed:
 /steward:work-top-backlog-item
 ```
 
-To smoke-test the skill and MCP tool together, open Claude Code in the repository
-you want the steward to watch and run:
+To smoke-test the skill and MCP tool together, first confirm `/mcp` shows the
+`steward` server is authenticated, then open Claude Code in the repository you
+want the steward to watch and run:
 
 ```text
 /steward:define-steward
