@@ -60,7 +60,7 @@ that the Steward GitHub App can access and run:
 /steward:define-steward
 
 Inspect this repository and call configure_steward with action="validate" for
-a draft steward. Do not apply anything yet.
+a draft steward. Do not create or update anything yet.
 ```
 
 To test the full steward creation path, use:
@@ -106,7 +106,7 @@ Once installed, Claude Code can use these tools:
 
 Plugin skills are namespaced by Claude Code as `/steward:<skill-name>`.
 
-- `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, apply it after user approval, then reconcile inventory and initialize the steward from the coding agent.
+- `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, create or update it after user approval, then reconcile inventory and initialize the steward from the coding agent.
 - `/steward:work-top-backlog-item` - Use the Steward CLI to inspect and claim the top backlog item, set up the correct branch/worktree, implement the work, open a linked PR, and continue through checks and review comments until the PR is merge-ready.
 
 ## Agent-Ready Status
@@ -190,7 +190,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.9.7
+Current version: 0.9.9
 
 ## License
 
