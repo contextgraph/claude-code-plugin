@@ -194,7 +194,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.9.11
+Current version: 0.9.12
 
 ## License
 

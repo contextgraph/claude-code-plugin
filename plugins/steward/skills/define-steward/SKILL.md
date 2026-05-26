@@ -38,18 +38,19 @@ If the user provides a zone, inspect the repository to ground that zone before d
 2. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
 3. Inspect the repository before drafting anything.
 4. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
-5. Draft a spec.
-6. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
-7. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
-8. Ask for approval in natural language before writing.
-9. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
-10. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
-11. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
-12. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
-13. Ask for approval in natural language before saving initialization artifacts.
-14. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
-15. End by offering two next steps: work one of the new backlog items, or define another steward.
-16. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
+5. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
+6. Draft a spec.
+7. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
+8. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
+9. Ask for approval in natural language before writing.
+10. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
+11. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
+12. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
+13. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
+14. Ask for approval in natural language before saving initialization artifacts.
+15. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
+16. End by offering two next steps: work one of the new backlog items, or define another steward.
+17. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
 
 If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, metrics, or evidence.
 
@@ -122,6 +123,10 @@ These slots ground the steward in real artifacts. The create step seeds the dura
 Inventory is optional and at most one item. It is the durable list this steward maintains and re-reads on every heartbeat. Good examples: "Analytics event catalog", "External API surface", "Cron job registry", "Public route inventory". Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
 
 Metrics are measurable health signals. Anchor each metric to a single rubric dimension by exact name in `dimension_name`. Avoid unmeasurable metrics such as "Developer happiness" and avoid metrics that only recount inventory size.
+
+Treat the `integration` response as the account capability source of truth. Use an available source only when the query or endpoint is grounded in real repository or provider evidence; treat unavailable provider sources as unavailable even if the repository imports that vendor, uses that vendor for internal logging, or contains old scripts that mention it.
+
+If the source needed for a metric is unavailable, mark the metric as `needs_instrumentation` and make the missing capability explicit. Do not implement provider setup scripts, seed scripts, local CLI assumptions, or direct database writes just to make the metric look configured. Instead, ask the user to choose one path: connect the integration, add product instrumentation, or expose a first-party measurement endpoint that returns `{"value": number}`.
 
 Evidence is a short list of repository-specific anchors. Each line names a real file, workflow, or recurring issue. Five or fewer is plenty. If you cannot list two or three pieces of concrete evidence, the steward is probably too speculative.
 
