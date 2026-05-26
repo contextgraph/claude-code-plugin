@@ -47,6 +47,12 @@ Check that the steward definition skill is installed:
 /steward:define-steward
 ```
 
+Check that the backlog execution skill is installed:
+
+```text
+/steward:work-top-backlog-item
+```
+
 To smoke-test the skill and MCP tool together, open Claude Code in a repository
 that the Steward GitHub App can access and run:
 
@@ -72,6 +78,7 @@ initialization artifacts.
 
 - **Persistent Action Management**: Create, update, and track actions across sessions
 - **Repository-Native Steward Definition**: Use `/steward:define-steward` to inspect a repo, create a rubric-centric steward with `configure_steward`, reconcile inventory, and initialize the steward from Claude Code
+- **Backlog Execution Loop**: Use `/steward:work-top-backlog-item` to claim the highest-priority Steward backlog item, prepare its branch/worktree, open the linked PR, and keep working review feedback and CI until the PR is merge-ready
 - **Hierarchical Planning**: Organize work in parent-child relationships
 - **Dependency Tracking**: Manage action dependencies and execution order
 - **Semantic Search**: Find actions using natural language queries
@@ -100,6 +107,7 @@ Once installed, Claude Code can use these tools:
 Plugin skills are namespaced by Claude Code as `/steward:<skill-name>`.
 
 - `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, apply it after user approval, then reconcile inventory and initialize the steward from the coding agent.
+- `/steward:work-top-backlog-item` - Use the Steward CLI to inspect and claim the top backlog item, set up the correct branch/worktree, implement the work, open a linked PR, and continue through checks and review comments until the PR is merge-ready.
 
 ## Agent-Ready Status
 
