@@ -48,7 +48,8 @@ If the user provides a zone, inspect the repository to ground that zone before d
 12. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
 13. Ask for approval in natural language before saving initialization artifacts.
 14. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
-15. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
+15. End by offering two next steps: work one of the new backlog items, or define another steward.
+16. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
 
 If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, metrics, or evidence.
 
@@ -81,6 +82,18 @@ Does this initialization plan look right? Any changes before I save the note and
 ```
 
 If the user says yes, go ahead, looks good, create it, save it, or similar, treat that as approval. If the user asks a question or requests a change, answer or revise before calling the write action.
+
+## Closing The Flow
+
+After initialization artifacts are saved, do not end with only a success message. Encourage the user to keep momentum with two concrete choices:
+
+```text
+This steward is ready. Want to take one of its new backlog items next, or define another steward for a different part of the repo?
+```
+
+If `/steward:work-top-backlog-item` is available, mention it as the fastest path for the first option. If that skill is not available, offer to inspect the new backlog items and help choose one manually.
+
+If the user wants to define another steward, restart this skill from the beginning and preserve the same principle: ask whether they already have a zone or want repository-grounded suggestions.
 
 ## Rubric Architecture
 
@@ -326,6 +339,7 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 - Include `inventory`, `metrics`, and `evidence` only when creating a steward. Omit them for update mode.
 - After creating a steward, follow the returned `activation.next_action` until it is `done`.
 - Do not skip initialization. If inventory or initialization feels uncertain, inspect more repository evidence before previewing.
+- After initialization, offer to work a new backlog item or define another steward.
 - If the tool asks for workspace disambiguation, use `repository` first. Use `workspace_id` only when supplied by the product page or user.
 - Do not say "Apply?" to the user. Ask whether the steward or initialization plan seems right and whether they want adjustments before creating or saving.
 - Do not create or update a steward that the user has not approved.
