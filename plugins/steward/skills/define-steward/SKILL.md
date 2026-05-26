@@ -11,21 +11,44 @@ The Steward MCP server must be connected. If the `configure_steward` tool is not
 
 A steward is an AI agent with one zone of concern. Every other artifact - its mission, review lens, backlog, metrics, notes, and first actions - starts from a small structured steward spec: an ownership zone, a rubric of 4-7 dimensions, and a thin layer of inventory, metric, and evidence anchors. The `configure_steward` MCP tool is the only path that writes a steward, and the coding agent owns the post-create activation work.
 
+## Start Here
+
+When this skill starts, first determine whether this is likely the user's first steward. If the `list_stewards` MCP tool is available, call it once for the current workspace or repository context. If the user has zero stewards, treat the workflow as onboarding, not just data entry.
+
+For a first steward, briefly explain the model before asking for a zone:
+
+- A steward is useful because it is narrow.
+- The rubric is the steward's judgment system, not decorative metadata.
+- Inventory, metrics, notes, and first actions make the steward feel native to the repository.
+- The coding agent will inspect the repo and configure those artifacts with the user, rather than making the user fill out a form.
+
+Keep this orientation short: 3-5 sentences, then ask the opening question.
+
+When the user has not provided an explicit steward zone, ask one short question before inspecting or suggesting zones:
+
+```text
+Do you already have a stewardship zone in mind, or should I inspect the repository and suggest a few narrow options?
+```
+
+If the user provides a zone, inspect the repository to ground that zone before drafting. If the user asks for suggestions, inspect first, then offer 3-5 narrow options with one-line evidence for each. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
+
 ## Workflow
 
-1. Inspect the repository before drafting anything.
-2. Pick one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
-3. Draft a spec.
-4. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
-5. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
-6. Ask for approval before writing.
-7. Call `configure_steward` with `action: "apply"` only after approval.
-8. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
-9. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
-10. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
-11. Ask for approval before saving initialization artifacts.
-12. Call `configure_steward` with `action: "apply_initialization"` only after approval.
-13. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
+1. Check existing stewards when `list_stewards` is available. If there are none, give the short first-steward orientation above.
+2. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
+3. Inspect the repository before drafting anything.
+4. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
+5. Draft a spec.
+6. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
+7. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
+8. Ask for approval before writing.
+9. Call `configure_steward` with `action: "apply"` only after approval.
+10. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
+11. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
+12. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
+13. Ask for approval before saving initialization artifacts.
+14. Call `configure_steward` with `action: "apply_initialization"` only after approval.
+15. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
 
 If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, metrics, or evidence.
 
@@ -73,7 +96,7 @@ Evidence is a short list of repository-specific anchors. Each line names a real 
 
 ## Activation Actions
 
-Creation is not complete when `action: "apply"` returns. The returned `activation.next_action` tells you what to do next.
+Creation is not complete when `action: "apply"` returns. The returned `activation.next_action` tells you what to do next. These are not separate MCP tools; they are action values passed to the same `configure_steward` tool.
 
 If the next action is `reconcile_inventory`, call:
 
@@ -278,6 +301,8 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 ## Guardrails
 
 - Prefer repository evidence over generic best practices.
+- If this appears to be the user's first steward, teach the steward model briefly before asking for inputs.
+- Ask whether the user has a zone or wants suggestions before generating a zone menu.
 - Replace every handoff marker before validation or preview. A value like `contextgraph/<repo-name-needed>` is a hint, not a valid spec.
 - Keep dimension names stable; inventory and metric anchors match names exactly.
 - Include `inventory`, `metrics`, and `evidence` only when creating a steward. Omit them for update mode.
