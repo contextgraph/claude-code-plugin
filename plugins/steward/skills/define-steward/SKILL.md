@@ -39,18 +39,19 @@ If the user provides a zone, inspect the repository to ground that zone before d
 3. Inspect the repository before drafting anything.
 4. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
 5. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
-6. Draft a spec.
+6. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
 7. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
 8. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
 9. Ask for approval in natural language before writing.
 10. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
 11. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
-12. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
-13. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
-14. Ask for approval in natural language before saving initialization artifacts.
-15. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
-16. End by offering two next steps: work one of the new backlog items, or define another steward.
-17. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
+12. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory and metric measurability.
+13. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
+14. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
+15. Ask for approval in natural language before saving initialization artifacts.
+16. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
+17. End by offering two next steps: work one of the new backlog items, or define another steward.
+18. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory, metrics, or evidence notes.
 
 If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, metrics, or evidence.
 
@@ -128,6 +129,8 @@ Treat the `integration` response as the account capability source of truth. Use 
 
 If the source needed for a metric is unavailable, mark the metric as `needs_instrumentation` and make the missing capability explicit. Do not implement provider setup scripts, seed scripts, local CLI assumptions, or direct database writes just to make the metric look configured. Instead, ask the user to choose one path: connect the integration, add product instrumentation, or expose a first-party measurement endpoint that returns `{"value": number}`.
 
+Only include currently sampleable metrics in `spec.metrics`. A metric is sampleable now only when the agent can name the available source and the concrete query or endpoint that returns a numeric value. Aspirational metrics belong in initialization backlog items until a real sampling path exists.
+
 Evidence is a short list of repository-specific anchors. Each line names a real file, workflow, or recurring issue. Five or fewer is plenty. If you cannot list two or three pieces of concrete evidence, the steward is probably too speculative.
 
 ## Activation Actions
@@ -159,6 +162,22 @@ If the next action is `reconcile_inventory`, call:
 ```
 
 Use stable keys that will still make sense after files move. Prefer keys such as route names, event names, API names, workflow names, or component names over raw file paths. Do not send duplicate keys.
+
+Before drafting or previewing initialization artifacts, show a steward readiness review and ask whether it looks right.
+
+Inventory review:
+
+- Name the inventory and the number of reconciled entries.
+- Show representative entries, not just a count.
+- Explain what the inventory covers.
+- Call out gaps, uncertain entries, or scope boundaries.
+
+Metric review:
+
+- List each metric included in the steward spec and why it is sampleable now.
+- Name the measurement source and query or endpoint for each sampleable metric.
+- List candidate metrics that need instrumentation and the exact missing source.
+- Convert each needs instrumentation metric into a concrete initialization backlog item instead of keeping it in `spec.metrics`.
 
 After inventory reconciliation, or immediately after create when there is no inventory, draft initialization artifacts and call:
 
@@ -207,13 +226,7 @@ Backlog items must be specific and grounded in files the agent inspected. Use `m
       "description": "What is kept in the catalog and how it is maintained.",
       "dimension_names": ["Dimension one"]
     },
-    "metrics": [
-      {
-        "name": "Metric name",
-        "description": "What the metric measures.",
-        "dimension_name": "Dimension one"
-      }
-    ],
+    "metrics": [],
     "evidence": [
       "Concrete file, workflow, or incident from this repo."
     ],
@@ -227,6 +240,7 @@ Backlog items must be specific and grounded in files the agent inspected. Use `m
 - `rubric_dimensions` must have 4 to 7 entries with unique names.
 - `inventory.dimension_names` must each match a rubric dimension name exactly.
 - Each `metrics[i].dimension_name`, when set, must match a rubric dimension name exactly.
+- `metrics` may be empty. Populate it only with metrics that are sampleable now.
 - `repositories` accepts concrete `owner/repo` slugs or full GitHub URLs; the server canonicalizes them.
 - Empty `repositories` means the steward is scoped to every installed repository in the resolved workspace. Use it intentionally.
 
@@ -251,13 +265,7 @@ Backlog items must be specific and grounded in files the agent inspected. Use `m
       "description": "Known events, emit sites, properties, and dashboard consumers.",
       "dimension_names": ["Event taxonomy", "Dashboard alignment"]
     },
-    "metrics": [
-      {
-        "name": "Uncataloged event count",
-        "description": "Events emitted in code but absent from the catalog.",
-        "dimension_name": "Event taxonomy"
-      }
-    ],
+    "metrics": [],
     "evidence": [
       "app/signup/page.tsx emits onboarding events consumed by the activation dashboard.",
       "lib/analytics/events.ts declares named event constants used across emit sites."
@@ -289,18 +297,7 @@ Backlog items must be specific and grounded in files the agent inspected. Use `m
       "description": "Routes, dialogs, forms, navigation regions, and reusable controls with accessibility obligations.",
       "dimension_names": ["Keyboard reachability", "Semantic structure", "Form and error affordances"]
     },
-    "metrics": [
-      {
-        "name": "Unlabeled control count",
-        "description": "Interactive elements without an accessible name in covered product flows.",
-        "dimension_name": "Semantic structure"
-      },
-      {
-        "name": "Keyboard trap regression count",
-        "description": "Flows where keyboard focus cannot enter, complete, or exit predictably.",
-        "dimension_name": "Focus management"
-      }
-    ],
+    "metrics": [],
     "evidence": [
       "components/ui/dialog.tsx defines focus boundaries for authenticated workflows.",
       "__tests__/accessibility/wcag-color-contrast.test.ts checks contrast regressions.",
