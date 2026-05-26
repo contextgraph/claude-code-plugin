@@ -1,12 +1,12 @@
 # Steward Plugin for Claude Code
 
-Steward is a **living planning layer** that self-improves with every agentic execution. It provides:
+Steward helps Claude Code define and activate **repository-native stewards**: narrow, rubric-centric agents that understand a specific codebase domain. It provides:
 
-1. **Low-friction planning input**: Vibe-like, natural language planning that integrates everywhere you work
-2. **Living, responsive planning layer**: Plans that improve and evolve with every agentic execution, learning optimal action sizing and context relevance
-3. **Self-documenting outputs**: Automatically generates tailored documentation for different purposes and personas
+1. **Repository-grounded steward definition**: Inspect a codebase, draft a narrow ownership zone, and preview a rubric before writing anything
+2. **Agent-owned activation**: Reconcile inventory and initialize the steward from the same Claude Code session
+3. **Persistent action management**: Create, update, and track Steward actions across sessions
 
-The system transforms free-form ideas into optimally-sized, executable actions with just-right context, eliminates wasted tokens and retry loops, and captures the full story of your work's evolution.
+The plugin connects Claude Code to the Steward MCP server so steward setup happens inside the repository where the context lives.
 
 ## Installation
 
@@ -182,7 +182,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.9.5
+Current version: 0.9.6
 
 ## License
 
