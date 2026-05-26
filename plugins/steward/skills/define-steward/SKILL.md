@@ -45,6 +45,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 ## Workflow
 
 1. Call `prepare_steward_onboarding` for the current repository and complete any returned setup handoff before continuing.
+   Keep the resolved workspace slug from the readiness response. You will use it later to link the user directly to the steward page.
 2. Check existing stewards when `list_stewards` is available. If there are none, give the short first-steward orientation above.
 3. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
 4. Inspect the repository before drafting anything.
@@ -54,7 +55,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 8. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
 9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, metric anchors, and the short operating model described below.
 10. Ask for approval in natural language before writing.
-11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
+11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward. After a successful create, show the direct steward page link using the resolved workspace slug and returned steward id.
 12. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
 13. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory and metric measurability.
 14. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
@@ -104,12 +105,24 @@ Does this initialization plan look right? Any changes before I save the note and
 
 If the user says yes, go ahead, looks good, create it, save it, or similar, treat that as approval. If the user asks a question or requests a change, answer or revise before calling the write action.
 
+## Steward Page Link
+
+After `configure_steward` with `action: "apply"` succeeds, build the direct steward page URL from the resolved workspace slug and returned steward id:
+
+```text
+https://www.steward.foo/<workspace-slug>/stewards/<steward-id>
+```
+
+Use the exact `workspace.slug` from `prepare_steward_onboarding` and `steward.id` from the `configure_steward` response. Include this link in the creation success message and again after initialization artifacts are saved. If the workspace slug is unavailable, do not invent one; say that the steward is available in the Steward dashboard and include the steward id.
+
 ## Closing The Flow
 
 After initialization artifacts are saved, do not end with only a success message. Encourage the user to keep momentum with two concrete choices:
 
 ```text
-This steward is ready. Want to take one of its new backlog items next, or define another steward for a different part of the repo?
+This steward is ready: https://www.steward.foo/<workspace-slug>/stewards/<steward-id>
+
+Want to take one of its new backlog items next, or define another steward for a different part of the repo?
 ```
 
 If `/steward:work-top-backlog-item` is available, mention it as the fastest path for the first option. If that skill is not available, offer to inspect the new backlog items and help choose one manually.
