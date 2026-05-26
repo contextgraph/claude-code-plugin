@@ -52,7 +52,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
 7. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
 8. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
-9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and metric anchors.
+9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, metric anchors, and the short operating model described below.
 10. Ask for approval in natural language before writing.
 11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward.
 12. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
@@ -87,6 +87,14 @@ After the steward preview, ask something like:
 ```text
 Does this seem right? Any questions or adjustments before I create this steward?
 ```
+
+Before asking that approval question, briefly explain what this steward will do after initialization:
+
+- Vigilance: it reviews every relevant PR or commit through this rubric and raises concerns when the zone is at risk.
+- Mapping: it surveys the files, workflows, and recurring issues inside its zone, maintains its inventory, and reports regularly as the landscape changes.
+- Advisor: it is available for focused consultation and chat when the user wants judgment about this domain.
+
+Keep this operating model to three short bullets. Tie each bullet to the concrete steward being previewed rather than describing stewards generically.
 
 After the initialization preview, ask something like:
 
