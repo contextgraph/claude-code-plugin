@@ -1,65 +1,92 @@
 ---
 name: work-top-backlog-item
-description: Use when the user wants Claude Code to work the top Steward backlog item end-to-end. Claim the current top item with the steward CLI, create the correct branch/worktree, implement the work, open a linked PR, monitor PR checks and review threads, address feedback, and continue until the PR is green and merge-ready.
+description: Use when the user wants Claude Code to work the top Steward backlog item end-to-end. Claim the current top item through the Steward MCP server, create the correct local branch/worktree, implement the work, open a linked PR, monitor PR checks and review threads, address feedback, and continue until the PR is green and merge-ready.
 ---
 
 # Work Top Backlog Item
 
 Use this skill when the user asks to work the next/top Steward backlog item, run the Steward queue, or continue a claimed Steward backlog PR until it is merge-ready.
 
-The Steward CLI and GitHub CLI must be available and authenticated. If either is missing or unauthenticated, ask the user to run the required auth flow (`steward auth` or `gh auth login`) before claiming work.
+The Steward MCP server must be connected. If Steward MCP tools are unavailable, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it. Use the Steward CLI only as a fallback for local workspace helpers such as `steward backlog setup` or legacy PR-link recovery. The GitHub CLI must be available and authenticated for PR creation, checks, and review inspection.
+
+## Steward MCP Tools
+
+Use `manage_backlog_work` as the normal Steward execution lifecycle tool:
+
+- `action: "peek"` - inspect top eligible work without changing state.
+- `action: "claim"` - claim top eligible work for a repository scope and register the branch that will be pushed.
+- `action: "release"` - unclaim work when pausing or abandoning before completion.
+- `action: "dismiss"` - dismiss obsolete, impossible, or unsafe work with an evidence-backed reason.
+
+Use `list_steward_backlog_items`, `update_steward_backlog_item`, and `create_steward_backlog_item` only for steward maintenance outside the normal execution lifecycle.
+
+The MCP surface does not create local git worktrees or open GitHub PRs. Use git and `gh` for those steps.
 
 ## Operating Rules
 
 - Claim exactly one backlog item at a time.
 - Start from latest `origin/main` unless repository instructions explicitly say otherwise.
-- Use the branch/worktree prepared by `steward backlog setup` when possible; it checks out the claim target expected by Steward.
+- Use the branch returned by `manage_backlog_work`; it is the claim target expected by Steward.
+- Use `steward backlog setup` when available to create the local worktree for an already-claimed item. If you create the worktree manually, use the exact claimed branch.
 - Do not abandon a claimed item silently. If the item is invalid, dismiss it with a concrete note. If you must pause or cannot continue, unclaim it with a concrete note to the user.
-- Keep the PR linked to the backlog item through the registered claim branch. If the PR is opened from another branch, include the Steward backlog marker from the claim/top output in the PR body or run `steward backlog link-pr`.
+- Keep the PR linked to the backlog item through the registered claim branch. If the PR is opened from another branch, include the Steward backlog marker from the claim response in the PR body or use the CLI fallback `steward backlog link-pr`.
 - Continue after the PR is open. Do not stop at PR creation unless the user explicitly asks you to stop there.
 
 ## Workflow
 
 1. Inspect repository instructions first: `AGENTS.md`, `CLAUDE.md`, README, package scripts, and CI docs.
-2. Check current claims with `steward backlog claimed`. If there is already a claimed item for this repository/user, continue that item instead of claiming a second one unless the user explicitly asks for a new claim.
-3. Inspect the highest-priority queued item with `steward backlog top`. If the user named a steward, pass `--steward <slug-or-id>`.
-4. Read the top output carefully. Capture the backlog identifier/reference, repository URL, objective, rationale, suggested/proposed branch, and any PR body marker. If no branch is shown, derive a conservative branch from the backlog reference, such as `steward/<steward-slug>/<backlog-slug>`.
-5. Fetch the target repository: `git fetch origin`.
-6. Claim the exact item from the top output and register the branch you will push from. Do not claim from `main` without `--branch`.
+2. Inspect any existing local branch or open PR for a previously claimed Steward backlog item. If you can identify an active claimed item for this repository/user, continue it instead of claiming a second one unless the user explicitly asks for a new claim.
+3. Peek top work with `manage_backlog_work` when you need context before naming the branch:
 
-```bash
-steward backlog claim <backlog-id-or-reference> --branch <proposed-or-derived-branch>
+```json
+{
+  "action": "peek",
+  "repositories": ["owner/repo-or-github-url"]
+}
 ```
 
-7. Prepare the workspace:
+4. Choose the branch you will push. Prefer the branch returned by peek. If no peek was needed, use repository branch policy or a conservative branch such as `steward/<short-task-slug>`.
+5. Claim the top item with `manage_backlog_work`:
+
+```json
+{
+  "action": "claim",
+  "repositories": ["owner/repo-or-github-url"],
+  "branch": "steward/<short-task-slug>"
+}
+```
+
+6. Read the claim response carefully. Capture the backlog identifier/reference, steward, repository URL, objective, rationale, registered branch, and any PR body marker.
+7. Fetch the target repository: `git fetch origin`.
+8. Prepare the local workspace using the exact registered branch. Prefer the CLI helper when available:
 
 ```bash
 steward backlog setup <backlog-id-or-reference> --base-ref origin/main
 ```
 
-Use `--path <path>` only when the user requested a specific location. Use `--in-place` only when repository policy or the user's request requires the current checkout.
-8. Move into the prepared worktree/branch and confirm it is clean and based on the intended base with `git status --short --branch`.
-9. Implement the backlog item using normal repository practice. Keep scope tied to the claimed item and its steward lens.
-10. Run the repository's required local validation. If no repository-specific contract exists, run the relevant build, test, lint, and typecheck commands. For this project, prefer the local CI-equivalent command when available.
-11. Commit the change and push the claim branch.
-12. Open a PR targeting `main`. The PR body must include:
+Use `--path <path>` only when the user requested a specific location. Use `--in-place` only when repository policy or the user's request requires the current checkout. If the CLI helper is unavailable, create the worktree manually from `origin/main` with the exact registered branch.
+9. Move into the prepared worktree/branch and confirm it is clean and based on the intended base with `git status --short --branch`.
+10. Implement the backlog item using normal repository practice. Keep scope tied to the claimed item and its steward lens.
+11. Run the repository's required local validation. If no repository-specific contract exists, run the relevant build, test, lint, and typecheck commands. For this project, prefer the local CI-equivalent command when available.
+12. Commit the change and push the claim branch.
+13. Open a PR targeting `main`. The PR body must include:
     - concise summary
     - validation results
     - the Steward backlog marker if branch-based linking is not guaranteed
-13. Verify the PR is linked to the backlog item. If not, run:
+14. Verify the PR is linked to the backlog item. If not, use the CLI fallback:
 
 ```bash
 steward backlog link-pr <backlog-id-or-reference> --pr <pr-number-or-url>
 ```
 
-14. Monitor the PR until merge-ready:
+15. Monitor the PR until merge-ready:
     - Use `gh pr checks --watch` or repeated `gh pr checks` for CI.
     - Use `gh pr view --comments --json reviews,comments,reviewDecision,mergeStateStatus,statusCheckRollup` for review state.
     - Use GitHub review-thread tooling when available for unresolved inline comments.
-15. If checks fail, inspect logs, fix the cause, rerun local validation, commit, push, and watch checks again.
-16. If reviewers or stewards leave actionable comments, address them in code or explain why no code change is appropriate, then push and re-check.
-17. Repeat until required checks pass, review threads are resolved or answered, and the PR is not draft, blocked, or conflicted.
-18. Report the PR URL, final validation state, and any merge blockers that remain outside the agent's control.
+16. If checks fail, inspect logs, fix the cause, rerun local validation, commit, push, and watch checks again.
+17. If reviewers or stewards leave actionable comments, address them in code or explain why no code change is appropriate, then push and re-check.
+18. Repeat until required checks pass, review threads are resolved or answered, and the PR is not draft, blocked, or conflicted.
+19. Report the PR URL, final validation state, and any merge blockers that remain outside the agent's control.
 
 ## PR Monitoring Loop
 
@@ -85,6 +112,6 @@ Do not claim a new top item while the current claimed PR still has failing check
 ## Failure Handling
 
 - No queued item: say there is no top backlog item to claim and stop.
-- Claim rejected because another agent claimed it: rerun `steward backlog top` once and claim the new top item.
-- Setup cannot create the worktree: do not hand-roll a conflicting branch name first. Read the error, check whether the item is already claimed with `steward backlog claimed`, and either continue the existing branch or unclaim with an explanation.
-- Item is impossible, obsolete, or unsafe: do not open a placeholder PR. Dismiss with `steward backlog dismiss <id-or-ref> --note "<reason>"` only when the reason is specific and evidence-backed; otherwise unclaim it.
+- Claim rejected because another agent claimed it: call `manage_backlog_work` with `action: "peek"` once, then claim the new top item if it is still appropriate.
+- Setup cannot create the worktree: do not switch to a different branch name. Read the error, check for an existing branch/worktree for the registered branch, and either continue there or unclaim with an explanation.
+- Item is impossible, obsolete, or unsafe: do not open a placeholder PR. Use `manage_backlog_work` with `action: "dismiss"` only when the reason is specific and evidence-backed; otherwise use `action: "release"`.
