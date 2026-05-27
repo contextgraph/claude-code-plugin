@@ -56,7 +56,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, metric anchors, and the short operating model described below.
 10. Ask for approval in natural language before writing.
 11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward. After a successful create, show the direct steward page link using the resolved workspace slug and returned steward id.
-12. If the tool returns `activation.next_action: "reconcile_inventory"`, inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
+12. If the tool returns `activation.next_action: "reconcile_inventory"`, narrate one short sentence to the user before scanning the repo — explain what the inventory is for this steward and that it is the durable list the steward will re-read on every heartbeat. Then inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
 13. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory and metric measurability.
 14. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
 15. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
@@ -183,6 +183,8 @@ Evidence is a short list of repository-specific anchors. Each line names a real 
 
 Creation is not complete when `action: "apply"` returns. The returned `activation.next_action` tells you what to do next. These are not separate MCP tools; they are action values passed to the same `configure_steward` tool.
 
+Before scanning the repository to reconcile inventory, tell the user what is happening in one short sentence. Name the inventory (for example "the analytics event catalog" or "the interactive surface inventory") and say it is the list this steward will re-read each heartbeat to keep its picture of the zone current. Do not skip this narration — the inventory step is invisible otherwise.
+
 If the next action is `reconcile_inventory`, call:
 
 ```json
@@ -220,11 +222,10 @@ Inventory review:
 
 Metric review:
 
-- List each metric included in the steward spec and why it is sampleable now.
-- Name the measurement source and query or endpoint for each sampleable metric.
-- List candidate metrics that need instrumentation and the exact missing source.
-- If none are sampleable, explain why metrics matter, what makes a metric sampleable, and how the candidate metrics will turn into actionable setup backlog items.
-- Convert each needs instrumentation metric into a concrete initialization backlog item instead of keeping it in `spec.metrics`.
+- Lead with the "are we improving?" framing: metrics let the steward answer that question for one rubric dimension over time. They are not decoration on the spec.
+- If any metrics are sampleable now, list each one with its rubric dimension, measurement source, and the concrete query or endpoint.
+- If no metrics are sampleable, keep this section short. Say so in one or two sentences and move on. Do not enumerate every provider that is unavailable, do not list speculative "candidate metrics" the user did not ask for, and do not turn the absence of metrics into its own backlog. Briefly mention that measurement can be added later via a connected integration, product instrumentation, or a first-party endpoint, and offer to add a backlog item only if there is a concrete, repository-grounded measurement worth tracking for this steward today.
+- Convert each needs-instrumentation metric the user does want into a concrete initialization backlog item instead of keeping it in `spec.metrics`.
 
 After inventory reconciliation, or immediately after create when there is no inventory, draft initialization artifacts and call:
 
