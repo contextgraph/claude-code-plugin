@@ -50,7 +50,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 3. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
 4. Inspect the repository before drafting anything.
 5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
-6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
+6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository. Cross-reference the returned `providers` list against vendor SDKs and config you found during inspection; for any provider the repository uses whose workspace status is `not_configured`, surface the integration opportunity with the direct connection URL before drafting metrics. See _Integration Opportunities_ below.
 7. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
 8. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
 9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, metric anchors, and the short operating model described below.
@@ -75,9 +75,33 @@ Read the actual repository, not generic best practices. At minimum:
 - Layout: the top directories under `app/`, `src/`, `lib/`, `pkg/`, or wherever the code lives. Note heavy-traffic and quiet areas.
 - Recent change pattern: latest 20-50 commit titles or recent PRs. Recurring themes are strong steward signals.
 - CI and tests: how tests are organized, what CI runs, and which failures recur.
-- Integrations and instrumentation: vendor SDKs and config such as PostHog, Axiom, Datadog, Stripe, GitHub, Clerk, or Resend.
+- Integrations and instrumentation: vendor SDKs and config such as PostHog (`posthog-js`, `posthog-node`, `posthog.capture` calls), Axiom (`@axiomhq/*`, Axiom dataset config), Langfuse (`langfuse`, `langfuse-node`), Datadog, Stripe, GitHub, Clerk, or Resend. Steward currently supports PostHog, Axiom, and Langfuse as live measurement providers; record every detected occurrence so step 6 can cross-reference workspace status and offer to connect any supported provider that the repo uses but the workspace has not configured.
 
 Do not draft a "Code Quality" or "Security" steward from generic priors. Those stewards do not feel native because they are not grounded in this codebase's recurring work.
+
+## Integration Opportunities
+
+Steward currently supports PostHog, Axiom, and Langfuse as live measurement providers. When the repository uses one of these providers but the workspace has not connected it, surface the opportunity rather than silently downgrading the metric to `needs_instrumentation`. A connected integration unlocks live metric sampling, dashboard alignment, and inventory reconciliation against real provider data, so missing the prompt is a missed onboarding moment.
+
+After calling `integration` with `action: "list_measurement_capabilities"`, compare the response against the SDKs and config you observed during inspection:
+
+- If a provider is in `providers` with `status: "connected"`, use it as a metric source where the query is grounded in real evidence.
+- If a provider is in `providers` with `status: "not_configured"` and you observed that provider's SDK or config in the repository, treat that as an integration opportunity. Tell the user what you found, why connecting helps this steward, and give the direct setup link before drafting metrics.
+- If a provider is `not_configured` and there is no repository evidence of that provider, do not bring it up. Do not pitch every supported provider to every user.
+
+The direct integration link uses the resolved workspace slug:
+
+```text
+https://www.steward.foo/<workspace-slug>/settings/integrations/<provider>
+```
+
+`<provider>` is `posthog`, `axiom`, or `langfuse`. Use the exact `workspace.slug` from `prepare_steward_onboarding`. Phrase the prompt as a choice, not a blocker. For example, after detecting PostHog usage in a workspace where PostHog is `not_configured`:
+
+```text
+This repo uses PostHog - I saw `posthog-js` in package.json and `posthog.capture` calls in lib/analytics/events.ts - but the workspace is not connected to PostHog yet. Connecting it at https://www.steward.foo/<workspace-slug>/settings/integrations/posthog would let this steward use live event counts and dashboard data for metrics and inventory reconciliation. Want to connect it now, or proceed without and queue a backlog item to connect later?
+```
+
+If the user connects the integration mid-flow, call `integration` with `action: "list_measurement_capabilities"` again to refresh status before drafting metrics. If the user declines or wants to defer, do not block: draft the steward without that provider's metrics and queue a "Connect <provider>" initialization backlog item that names the same setup URL in its rationale.
 
 ## User-Facing Approval Language
 
@@ -387,6 +411,7 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 - Keep dimension names stable; inventory and metric anchors match names exactly.
 - Include `inventory`, `metrics`, and `evidence` only when creating a steward. Omit them for update mode.
 - After creating a steward, follow the returned `activation.next_action` until it is `done`.
+- Before drafting metrics, cross-reference detected provider SDKs against the `integration` response. If the repo uses a supported provider that the workspace has not connected, offer the setup link rather than silently dropping the metric to `needs_instrumentation`.
 - Do not skip initialization. If inventory or initialization feels uncertain, inspect more repository evidence before previewing.
 - After initialization, offer to work a new backlog item or define another steward.
 - If the tool asks for workspace disambiguation, use `repository` first. Use `workspace_id` only when supplied by the product page or user.
