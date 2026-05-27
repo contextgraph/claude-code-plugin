@@ -25,14 +25,11 @@ Handle the response before doing any steward drafting:
 
 After setup is ready, determine whether this is likely the user's first steward. If the `list_stewards` MCP tool is available, call it once for the current workspace or repository context. If the user has zero stewards, treat the workflow as onboarding, not just data entry.
 
-For a first steward, briefly explain the model before asking for a zone:
+For a first steward, pause and explain the model before asking for a zone. Lead with this two-sentence beat, in your own words:
 
-- A steward is useful because it is narrow.
-- The rubric is the steward's judgment system, not decorative metadata.
-- Inventory, metrics, notes, and first actions make the steward feel native to the repository.
-- The coding agent will inspect the repo and configure those artifacts with the user, rather than making the user fill out a form.
+A steward is a focused AI agent that owns one narrow domain of your repository - it reviews PRs through its rubric, maintains an inventory of its zone, and gives advice when you work there. Good stewards are narrow and grounded: a concrete ownership zone with a rubric of 4-7 judgment criteria tied to real files in this codebase, not a generic label like "Quality" or "Frontend".
 
-Keep this orientation short: 3-5 sentences, then ask the opening question.
+Add at most one supporting sentence if it helps - for example, that the rubric is the steward's judgment system rather than decorative metadata, or that the coding agent will inspect the repo and configure inventory and first actions with the user rather than making them fill out a form. Then ask the opening question.
 
 When the user has not provided an explicit steward zone, ask one short question before inspecting or suggesting zones:
 
