@@ -31,7 +31,7 @@ When this is the first steward in this repo, the orientation pause below is a re
 - **Rubric**: the 4-7 judgment dimensions that make this a good — "optimal" — steward rather than a generic label. The rubric is the steward's point of view, not decorative metadata, and it is what shows up in PR reviews, heartbeats, and consult responses.
 - **Vigilance**: what the steward will actually do after creation — review every relevant PR or commit through this rubric, maintain its inventory, and surface concerns when the zone is at risk.
 
-Keep it to 3-5 sentences total, written for this user and this repository (not boilerplate). Mention that the coding agent will inspect the repo and configure inventory, metrics, notes, and first actions with the user rather than making them fill out a form. Then — and only then — ask the opening question.
+Keep it to 3-5 sentences total, written for this user and this repository (not boilerplate). A concrete opener you can adapt: "A steward is a focused AI agent that owns one narrow domain of your repository — it reviews PRs through its rubric, maintains an inventory of its zone, and gives advice when you work there." Mention that the coding agent will inspect the repo and configure inventory, metrics, notes, and first actions with the user rather than making them fill out a form. Then — and only then — ask the opening question.
 
 When this is not the first steward in the repo, skip the orientation and go directly to the opening question; existing stewards in the same repo mean the user already understands the model.
 
