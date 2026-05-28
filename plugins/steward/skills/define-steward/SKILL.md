@@ -50,7 +50,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 3. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
 4. Inspect the repository before drafting anything.
 5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
-6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
+6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository. If repository inspection found a measurement provider (such as PostHog) that this response reports as not connected, surface its one-click connect URL from the response and offer to connect it now, before drafting the spec. Do not defer a supported provider to a backlog item without first offering its connect link.
 7. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
 8. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
 9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, metric anchors, and the short operating model described below.
@@ -75,7 +75,7 @@ Read the actual repository, not generic best practices. At minimum:
 - Layout: the top directories under `app/`, `src/`, `lib/`, `pkg/`, or wherever the code lives. Note heavy-traffic and quiet areas.
 - Recent change pattern: latest 20-50 commit titles or recent PRs. Recurring themes are strong steward signals.
 - CI and tests: how tests are organized, what CI runs, and which failures recur.
-- Integrations and instrumentation: vendor SDKs and config such as PostHog, Axiom, Datadog, Stripe, GitHub, Clerk, or Resend.
+- Integrations and instrumentation: vendor SDKs and config such as PostHog, Axiom, Datadog, Stripe, GitHub, Clerk, or Resend. Note which measurement providers the repo references so you can cross-check them against `list_measurement_capabilities` and offer to connect any that are not configured yet.
 
 Do not draft a "Code Quality" or "Security" steward from generic priors. Those stewards do not feel native because they are not grounded in this codebase's recurring work.
 
@@ -165,7 +165,19 @@ Metrics are measurable health signals that let the steward answer "are we improv
 
 Treat the `integration` response as the account capability source of truth. Use an available source only when the query or endpoint is grounded in real repository or provider evidence; treat unavailable provider sources as unavailable even if the repository imports that vendor, uses that vendor for internal logging, or contains old scripts that mention it.
 
-If the source needed for a metric is unavailable, mark the metric as `needs_instrumentation` and make the missing capability explicit. Do not implement provider setup scripts, seed scripts, local CLI assumptions, or direct database writes just to make the metric look configured. Instead, ask the user to choose one path: connect the integration, add product instrumentation, or expose a first-party measurement endpoint that returns `{"value": number}`.
+### Offer To Connect Detected Integrations
+
+When repository inspection finds a measurement provider (PostHog, Axiom, Datadog, Stripe, and so on) and the `list_measurement_capabilities` response reports that source as not connected, do not silently fall back to a backlog item. The capabilities response carries a one-click connect (or authorize) URL for each connectable but unconfigured source. Surface that URL to the user inline, before you draft `spec.metrics`, and offer to connect the integration right away.
+
+Lead with the connect link rather than the alternatives:
+
+```text
+This repo uses PostHog, but it isn't connected to Steward yet. Connect it in one click and I can sample real metrics from it: <connect-url>
+```
+
+Only after the user declines, or when the response carries no connect URL for that source, fall back to the other paths below. Never file a backlog item for connecting a supported provider before offering its connect URL.
+
+If the source needed for a metric is unavailable, first offer to connect it inline as described above when a connect URL exists. If the user declines or no connect URL is available, mark the metric as `needs_instrumentation` and make the missing capability explicit. Do not implement provider setup scripts, seed scripts, local CLI assumptions, or direct database writes just to make the metric look configured. Instead, ask the user to choose one path: connect the integration, add product instrumentation, or expose a first-party measurement endpoint that returns `{"value": number}`.
 
 Only include currently sampleable metrics in `spec.metrics`. A metric is sampleable now only when the agent can name the available source and the concrete query or endpoint that returns a numeric value. Aspirational metrics belong in initialization backlog items until a real sampling path exists.
 
