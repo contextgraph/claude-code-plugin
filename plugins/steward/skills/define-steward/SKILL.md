@@ -23,16 +23,17 @@ Handle the response before doing any steward drafting:
 - If `next_action` is `fix_repository_access`, explain the reported access problem and stop until the user fixes it.
 - If `next_action` is `define_steward`, continue in Claude Code. Do not send the user back through web onboarding.
 
-After setup is ready, determine whether this is likely the user's first steward. If the `list_stewards` MCP tool is available, call it once for the current workspace or repository context. If the user has zero stewards, treat the workflow as onboarding, not just data entry.
+After setup is ready, determine whether this is the user's first steward in this repository. Call `list_stewards` for the resolved workspace and filter to stewards scoped to the current `owner/repo` (matching `repositories` exactly, or workspace-wide stewards that would apply here). If `list_stewards` is unavailable or errors, treat the run as first-steward-in-repo by default rather than skipping orientation. A user can have other stewards in the workspace and still be a first-time user in this repo; do not gate on the workspace-wide count.
 
-For a first steward, briefly explain the model before asking for a zone:
+When this is the first steward in this repo, the orientation pause below is a required step. Do not propose, inspect, or suggest a zone — and do not ask the opening question — until you have delivered the 3-5 sentence explanation and the user has acknowledged or moved past it. The orientation must cover all three of:
 
-- A steward is useful because it is narrow.
-- The rubric is the steward's judgment system, not decorative metadata.
-- Inventory, metrics, notes, and first actions make the steward feel native to the repository.
-- The coding agent will inspect the repo and configure those artifacts with the user, rather than making the user fill out a form.
+- **Reach**: what a steward owns, and why a steward is useful because it is narrow. Tie this to Ryan's framing — "what is the reach of a steward" — and make it explicit that a steward's reach is one zone of concern, not a department or framework heading.
+- **Rubric**: the 4-7 judgment dimensions that make this a good — "optimal" — steward rather than a generic label. The rubric is the steward's point of view, not decorative metadata, and it is what shows up in PR reviews, heartbeats, and consult responses.
+- **Vigilance**: what the steward will actually do after creation — review every relevant PR or commit through this rubric, maintain its inventory, and surface concerns when the zone is at risk.
 
-Keep this orientation short: 3-5 sentences, then ask the opening question.
+Keep it to 3-5 sentences total, written for this user and this repository (not boilerplate). Mention that the coding agent will inspect the repo and configure inventory, metrics, notes, and first actions with the user rather than making them fill out a form. Then — and only then — ask the opening question.
+
+When this is not the first steward in the repo, skip the orientation and go directly to the opening question; existing stewards in the same repo mean the user already understands the model.
 
 When the user has not provided an explicit steward zone, ask one short question before inspecting or suggesting zones:
 
@@ -46,7 +47,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 
 1. Call `prepare_steward_onboarding` for the current repository and complete any returned setup handoff before continuing.
    Keep the resolved workspace slug from the readiness response. You will use it later to link the user directly to the steward page.
-2. Check existing stewards when `list_stewards` is available. If there are none, give the short first-steward orientation above.
+2. Call `list_stewards` and filter to stewards scoped to this repository. If there are none scoped to this repo, deliver the first-steward orientation above before anything else — reach, rubric, vigilance, in 3-5 sentences. This is a hard step, not a soft suggestion. Do not skip it when `list_stewards` is unavailable; deliver the orientation by default.
 3. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
 4. Inspect the repository before drafting anything.
 5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
@@ -406,7 +407,7 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 ## Guardrails
 
 - Prefer repository evidence over generic best practices.
-- If this appears to be the user's first steward, teach the steward model briefly before asking for inputs.
+- If this is the user's first steward in this repository, deliver the reach / rubric / vigilance orientation before any zone proposal, suggestion menu, or opening question. The orientation is required, not optional, even when `list_stewards` is unavailable.
 - Ask whether the user has a zone or wants suggestions before generating a zone menu.
 - Replace every handoff marker before validation or preview. A value like `contextgraph/<repo-name-needed>` is a hint, not a valid spec.
 - Keep dimension names stable; inventory and metric anchors match names exactly.
