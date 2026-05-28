@@ -18,7 +18,7 @@ When this skill starts, first identify the current repository from the local git
 Handle the response before doing any steward drafting:
 
 - If `next_action` is `authenticate_mcp`, tell the user to complete the Claude Code MCP authentication browser handoff, then call `prepare_steward_onboarding` again.
-- If `next_action` is `install_github_app`, give the user the returned install URL. After the browser handoff, return to Claude Code and call `prepare_steward_onboarding` again.
+- If `next_action` is `install_github_app`, give the user the returned install URL. Before sending them off, tell them: "These are two different things — first we connect your account to Steward, then we install a GitHub App so Steward can review PRs." After the browser handoff, return to Claude Code and call `prepare_steward_onboarding` again.
 - If `next_action` is `choose_workspace`, call `prepare_steward_onboarding` again with the workspace selector requested by the response.
 - If `next_action` is `fix_repository_access`, explain the reported access problem and stop until the user fixes it.
 - If `next_action` is `define_steward`, continue in Claude Code. Do not send the user back through web onboarding.
