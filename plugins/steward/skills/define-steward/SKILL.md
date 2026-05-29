@@ -56,7 +56,7 @@ If the user provides a zone, inspect the repository to ground that zone before d
 9. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, metric anchors, and the short operating model described below.
 10. Ask for approval in natural language before writing.
 11. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward. After a successful create, show the direct steward page link using the resolved workspace slug and returned steward id.
-12. If the tool returns `activation.next_action: "reconcile_inventory"`, narrate one short sentence to the user before scanning the repo — explain what the inventory is for this steward and that it is the durable list the steward will re-read on every heartbeat. Then inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
+12. If the tool returns `activation.next_action: "reconcile_inventory"`, narrate one short sentence to the user before scanning the repo — explain what the inventory is for this steward and that it is the cached memory the steward reads on every review and consult (and refreshes at heartbeat). Then inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
 13. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory and metric measurability.
 14. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
 15. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
@@ -116,7 +116,7 @@ Does this seem right? Any questions or adjustments before I create this steward?
 Before asking that approval question, briefly explain what this steward will do after initialization:
 
 - Vigilance: it reviews every relevant PR or commit through this rubric and raises concerns when the zone is at risk.
-- Mapping: it surveys the files, workflows, and recurring issues inside its zone, maintains its inventory, and reports regularly as the landscape changes.
+- Mapping: it surveys the files, workflows, and recurring issues inside its zone and maintains its inventory — the cached memory it reads on every review and consult to recognize what it already knows about the zone.
 - Advisor: it is available for focused consultation and chat when the user wants judgment about this domain.
 
 Keep this operating model to three short bullets. Tie each bullet to the concrete steward being previewed rather than describing stewards generically.
@@ -183,7 +183,22 @@ Avoid:
 
 These slots ground the steward in real artifacts. The create step seeds the durable artifact shells; after creation, the coding agent reconciles the actual inventory contents and writes the first initialization note and backlog items through activation actions. Update mode cannot edit inventory, metrics, or evidence.
 
-Inventory is optional and at most one item. It is the durable list this steward maintains and re-reads on every heartbeat. Good examples: "Analytics event catalog", "External API surface", "Cron job registry", "Public route inventory". Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
+Inventory is optional and at most one item. It is the steward's compact, complete, cached memory of its domain — and it is injected into **every review and consult**, not just re-read at heartbeat. That is what lets the steward recognize what it already knows (this surface is covered, this token is audited, this event already exists) instead of re-deriving it from the diff each time. Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
+
+Because the whole inventory ships into every review, two properties matter equally: it must be **complete** (a partial catalog can't catch a naming collision or confirm coverage) and each row must be **lean** (a per-row size limit is enforced at write time). Completeness is bounded by mission narrowness: if a complete inventory of lean rows would be too large to read on every review, the zone is too broad — narrow the mission, don't summarize the inventory.
+
+**What a row is.** A row holds what review needs to know *now* about one thing — not how it got there. Inventories come in two shapes, and the row's content follows the shape:
+
+- **Catalog** — enumerates a namespace and each member's *contract*. Examples: "Analytics event catalog" (event → properties), "Inngest workflow registry" (workflow → trigger → steps), "Public route inventory", "External API surface". A row is `name + key attributes + dimension anchor`. Review value is namespace completeness: collisions, duplicates, contract drift.
+- **Coverage / audit** — enumerates a set of things and each one's *current status against a standard*. Examples: "Scanned accessibility surface inventory" (surface → is it gate-registered? → coverage mechanism → known-open gaps), "Endpoint authorization inventory" (endpoint → authz status → audit state). A row is `thing + current status + why`. Review value is the cached judgment: this is already covered / audited / a known accepted gap — don't re-flag it.
+
+**What a row is never** (regardless of shape):
+
+- **Change history** — "PR #696 then #698 did X/Y/Z", resolved-concern logs, `merged_at`. That belongs in notes.
+- **Open work items** — "should add a test for X", undocumented-thing trackers. That belongs in the backlog.
+- **Provider telemetry** — event volumes, user counts, last-seen timestamps. That is derived at heartbeat from the provider, not frozen into a row.
+
+Keep the current answer; drop the journey and the open work. A 4 KB row stuffed with PR-by-PR narrative is the signal that history and work-tracking have leaked into the inventory.
 
 Metrics are measurable health signals that let the steward answer "are we improving?" for one rubric dimension over time. Anchor each metric to a single rubric dimension by exact name in `dimension_name`. Avoid unmeasurable metrics such as "Developer happiness" and avoid metrics that only recount inventory size.
 
@@ -207,7 +222,7 @@ Evidence is a short list of repository-specific anchors. Each line names a real 
 
 Creation is not complete when `action: "apply"` returns. The returned `activation.next_action` tells you what to do next. These are not separate MCP tools; they are action values passed to the same `configure_steward` tool.
 
-Before scanning the repository to reconcile inventory, tell the user what is happening in one short sentence. Name the inventory (for example "the analytics event catalog" or "the interactive surface inventory") and say it is the list this steward will re-read each heartbeat to keep its picture of the zone current. Do not skip this narration — the inventory step is invisible otherwise.
+Before scanning the repository to reconcile inventory, tell the user what is happening in one short sentence. Name the inventory (for example "the analytics event catalog" or "the interactive surface inventory") and say it is the cached memory this steward reads on every review and consult to recognize what it already knows about the zone. Do not skip this narration — the inventory step is invisible otherwise.
 
 If the next action is `reconcile_inventory`, call:
 
@@ -222,7 +237,7 @@ If the next action is `reconcile_inventory`, call:
         "key": "stable-entry-key",
         "value": {
           "name": "Human-readable entry name",
-          "description": "Why this belongs in the steward's durable inventory.",
+          "description": "The current contract or coverage status review needs to know — not how it got there.",
           "paths": ["path/to/file.ts"],
           "dimension_names": ["Dimension one"]
         }
@@ -235,14 +250,17 @@ If the next action is `reconcile_inventory`, call:
 
 Use stable keys that will still make sense after files move. Prefer keys such as route names, event names, API names, workflow names, or component names over raw file paths. Do not send duplicate keys.
 
+Keep each row lean enough to read on every review: the current contract (catalog) or current status and why (coverage), plus paths and dimension anchors. Leave change history for notes, open work for the backlog, and provider telemetry for heartbeat-derived metrics. A row that needs a paragraph of PR-by-PR narrative is carrying material that belongs elsewhere — the write-time per-row size limit will reject it, and the fix is to move that material out, not to split the fact across keys.
+
 Before drafting or previewing initialization artifacts, show a steward readiness review and ask whether it looks right.
 
 Inventory review:
 
 - Name the inventory and the number of reconciled entries.
 - Show representative entries, not just a count.
-- Explain what the inventory covers.
-- Call out gaps, uncertain entries, or scope boundaries.
+- Explain what the inventory covers, and whether it is a catalog (contract per member) or a coverage/audit inventory (status per member).
+- Confirm rows are on-shape: current contract or status, not change history, open work, or telemetry.
+- Call out gaps, uncertain entries, or scope boundaries — and whether a complete inventory stays small enough to read on every review (if not, the zone may be too broad).
 
 Metric review:
 
@@ -410,6 +428,8 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 - Ask whether the user has a zone or wants suggestions before generating a zone menu.
 - Replace every handoff marker before validation or preview. A value like `contextgraph/<repo-name-needed>` is a hint, not a valid spec.
 - Keep dimension names stable; inventory and metric anchors match names exactly.
+- An inventory row holds what review needs to know now about one thing — its current contract (catalog) or current status and why (coverage). Keep rows lean; leave change history for notes, open work for the backlog, and provider telemetry for heartbeat-derived metrics.
+- Keep the inventory complete and narrow enough that the whole thing reads cheaply on every review; if it would not, narrow the mission rather than summarizing the inventory.
 - Include `inventory`, `metrics`, and `evidence` only when creating a steward. Omit them for update mode.
 - After creating a steward, follow the returned `activation.next_action` until it is `done`.
 - Before drafting metrics, cross-reference detected provider SDKs against the `integration` response. If the repo uses a supported provider that the workspace has not connected, offer the setup link rather than silently dropping the metric to `needs_instrumentation`.
