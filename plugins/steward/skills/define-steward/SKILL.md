@@ -34,22 +34,53 @@ For a first steward, briefly explain the model before asking for a zone:
 
 Keep this orientation short: 3-5 sentences, then ask the opening question.
 
-When the user has not provided an explicit steward zone, ask one short question before inspecting or suggesting zones:
+When the user has not provided an explicit steward zone, ask one short question before inspecting or suggesting zones. Offer three ways in:
 
 ```text
-Do you already have a stewardship zone in mind, or should I inspect the repository and suggest a few narrow options?
+How would you like to find this steward's zone?
+
+A. You have a zone in mind — tell me what to watch.
+B. Browse battle-tested steward prototypes — narrow lenses that work well across most codebases — and see which fit best here.
+C. Inspect the repository and suggest zones grounded in your recent work.
 ```
 
-If the user provides a zone, inspect the repository to ground that zone before drafting. If the user asks for suggestions, inspect first, then offer three narrow options with one-line evidence for each. Four options is the hard maximum when the repository genuinely has four strong candidate zones. Never present five or more options in one question or structured choice menu; Claude Code rejects question menus with too many options. If you find more than four plausible zones, show the best three or four and say you can inspect more if none fit. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
+All three modes end at the same place: one narrow zone grounded in this repository. They differ only in where the starting lens comes from — the user's intent (A), the prototype library (B), or recent repository activity (C). Every mode is still customized to this repo.
+
+- A: the user names a zone. Inspect the repository to ground it before drafting.
+- B: see "Battle-Tested Steward Prototypes" below. Give the short orientation, inspect the repository, then surface the three or four prototypes that fit best, each with one-line evidence. The user picks one; specialize it to this repo.
+- C: inspect first, then offer three narrow options grounded in recent work, with one-line evidence for each.
+
+Four options is the hard maximum for any choice menu. Never present five or more options in one question or structured choice menu; Claude Code rejects question menus with too many options. If you find more than four plausible zones or prototypes, show the best three or four and say you can inspect more if none fit. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
+
+## Battle-Tested Steward Prototypes
+
+Option B starts from a prototype: a narrow steward lens that has proven useful across many codebases. Prototypes are not canned stewards and not templates to paste. They are starting lenses — the narrow-decomposition work already done — that you still ground and specialize against this repository. A prototype tells you where to look; the rubric, inventory, and evidence still come from this repo's real artifacts.
+
+When the user chooses B, give a short orientation (what a prototype is, and that you will fit one to their repo), inspect the repository, then surface the three or four prototypes that best fit, each with one-line evidence from this codebase. Do not list all of them; show the ones that fit. Once the user picks one, the workflow is identical to every other mode.
+
+Current prototypes:
+
+- **Auth & access boundary** — where identity is checked and enforced: route guards, session and token handling, permission checks.
+- **Subscription / billing integrity** — plan state, entitlement gating, and webhook-driven billing transitions stay correct.
+- **Data retention & PII** — what personal data is stored, where it flows, and whether deletion and retention paths exist.
+- **Product analytics contracts** — event names, typed properties, emit sites, and dashboard alignment.
+- **Product copy / brand voice** — user-facing strings: tone, terminology, and consistency across surfaces.
+- **SEO** — crawlability, metadata, structured data, canonical URLs, sitemap and robots.
+- **Dead code** — unreferenced exports, unreachable branches, orphaned files, and stale flags.
+- **Perf budget** — latency, bundle size, and render cost measured against a budget.
+- **External API surface** — public routes, webhooks, and versioning of backward-compatible contracts.
+- **Background jobs & async correctness** — idempotency, retries, ordering, and failure handling in queues and cron.
+
+Each prototype still has to pass the narrowness test for this specific repository. If a prototype is too broad for how this repo uses it, decompose it before drafting. Treat this as a starting set, not a fixed catalog.
 
 ## Workflow
 
 1. Call `prepare_steward_onboarding` for the current repository and complete any returned setup handoff before continuing.
    Keep the resolved workspace slug from the readiness response. You will use it later to link the user directly to the steward page.
 2. Check existing stewards when `list_stewards` is available. If there are none, give the short first-steward orientation above.
-3. Ask whether the user already has a stewardship zone or wants repository-grounded suggestions, unless they already answered that in the prompt.
+3. Ask how the user wants to find the zone — their own idea (A), a battle-tested prototype (B), or repository-grounded suggestions from recent work (C) — unless they already answered that in the prompt.
 4. Inspect the repository before drafting anything.
-5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture" unless the user explicitly wants that breadth.
+5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture"; if the user wants one of those, decompose it into a narrow lens that passes the narrowness test.
 6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository.
 7. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
 8. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
@@ -77,7 +108,7 @@ Read the actual repository, not generic best practices. At minimum:
 - CI and tests: how tests are organized, what CI runs, and which failures recur.
 - Integrations and instrumentation: vendor SDKs and config such as PostHog, Axiom, Datadog, Stripe, GitHub, Clerk, or Resend.
 
-Do not draft a "Code Quality" or "Security" steward from generic priors. Those stewards do not feel native because they are not grounded in this codebase's recurring work.
+The test for any candidate steward is narrowness, not where the idea came from. A heading like "Code Quality" or "Security" fails not because it is generic but because it is too broad to carry one rubric — it bundles many independent judgment lenses. Do not reject the topic; decompose it. Enumerate what "Code Quality" actually watches and you find real stewards inside it — "Dead code", "Test isolation", "Dependency hygiene" — and sometimes you must go a level deeper still. A steward is admissible once its zone is narrow enough that a single 4-7 dimension rubric covers it. This test applies to all three modes: a user's own idea, a prototype, and a recent-work suggestion each have to pass it.
 
 ## User-Facing Approval Language
 
@@ -382,7 +413,8 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 
 - Prefer repository evidence over generic best practices.
 - If this appears to be the user's first steward, teach the steward model briefly before asking for inputs.
-- Ask whether the user has a zone or wants suggestions before generating a zone menu.
+- Offer the three entry modes — the user's own zone (A), a battle-tested prototype (B), or recent-work suggestions (C) — before generating a zone menu, unless the user already chose one.
+- Narrowness is the admission test for every steward, in all three modes. Decompose broad headings instead of rejecting the topic.
 - Replace every handoff marker before validation or preview. A value like `contextgraph/<repo-name-needed>` is a hint, not a valid spec.
 - Keep dimension names stable; inventory and metric anchors match names exactly.
 - Include `inventory`, `metrics`, and `evidence` only when creating a steward. Omit them for update mode.
