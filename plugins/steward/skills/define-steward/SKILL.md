@@ -51,7 +51,7 @@ All three modes end at the same place: one narrow zone grounded in this reposito
 - B: see "Battle-Tested Steward Prototypes" below. Give the short orientation, inspect the repository, then surface the three or four prototypes that fit best, each with one-line evidence. The user picks one; specialize it to this repo.
 - C: inspect first, then offer three narrow options grounded in recent work, with one-line evidence for each.
 
-Four options is the hard maximum for any choice menu. Never present five or more options in one question or structured choice menu; Claude Code rejects question menus with too many options. If you find more than four plausible zones or prototypes, show the best three or four and say you can inspect more if none fit. Do not open with a suggestion menu unless the user asked for suggestions or already provided enough context to imply that they want suggestions.
+Four options is the hard maximum for any choice menu. Never present five or more options in one question or structured choice menu; Claude Code rejects question menus with too many options. If you find more than four plausible zones or prototypes, show the best three or four and say you can inspect more if none fit. Default to asking the A/B/C question; do not jump straight to a mode C zone-suggestions menu unless the user asked for suggestions or already provided enough context to imply that they want them.
 
 ## Battle-Tested Steward Prototypes
 
