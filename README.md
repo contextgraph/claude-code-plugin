@@ -85,7 +85,7 @@ initialization artifacts.
 
 - **Persistent Action Management**: Create, update, and track actions across sessions
 - **Repository-Native Steward Definition**: Use `/steward:define-steward` to inspect a repo, create a rubric-centric steward with `configure_steward`, reconcile inventory, and initialize the steward from Claude Code
-- **Backlog Execution Loop**: Use `/steward:work-top-backlog-item` to claim the highest-priority Steward backlog item, prepare its branch/worktree, open the linked PR, and keep working review feedback and CI until the PR is merge-ready
+- **Backlog Execution Loop**: Use `/steward:work-top-backlog-item` to claim a Steward backlog item — the repository-wide top item by default, a specific item you name, or the top item within a single steward's purview — prepare its branch/worktree, open the linked PR, and keep working through review feedback and CI checks until the PR is merge-ready
 - **Plan Review With Stewards**: Use `/steward:plan-review` to consult the repository's stewards on a proposed plan before implementation, surface their attributed concerns, and propose a new steward when the plan introduces an unowned domain such as a new integration
 - **Hierarchical Planning**: Organize work in parent-child relationships
 - **Dependency Tracking**: Manage action dependencies and execution order
@@ -121,7 +121,7 @@ Once installed, Claude Code can use these tools:
 Plugin skills are namespaced by Claude Code as `/steward:<skill-name>`.
 
 - `/steward:define-steward` - Inspect the current repository, draft a narrow steward spec, validate and preview it with `configure_steward`, create or update it after user approval, then reconcile inventory and initialize the steward from the coding agent.
-- `/steward:work-top-backlog-item` - Use the Steward MCP server to claim the top backlog item, set up the registered branch/worktree, implement the work, open a PR linked by that branch, and continue through checks and review comments until the PR is merge-ready.
+- `/steward:work-top-backlog-item` - Use the Steward MCP server to claim a backlog item — the repository-wide top item by default, a specific item you name (by id or reference), or the top item for a named steward — set up the registered branch/worktree, implement the work, open a PR linked by that branch, and continue through checks and review comments until the PR is merge-ready.
 - `/steward:plan-review` - Before implementing a plan or design, consult the repository's stewards via `consult` and return their attributed feedback. If the plan crosses a domain (often a new integration) that no existing steward owns, propose a narrow new steward for that domain.
 
 ## Agent-Ready Status
