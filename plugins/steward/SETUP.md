@@ -66,8 +66,16 @@ To work the current top Steward backlog item end-to-end, run:
 /steward:work-top-backlog-item
 ```
 
-Then ask Claude Code to claim the top item with the Steward MCP server, prepare
-the registered branch/worktree, open the PR from that branch, and keep
+With no target it claims the repository-wide top item. To scope the work, name
+a steward or a specific item when you invoke it, for example:
+
+```text
+/steward:work-top-backlog-item work the top item for the API-contract steward
+/steward:work-top-backlog-item work the "knip baseline" item
+```
+
+Then Claude Code claims the chosen item with the Steward MCP server, prepares
+the registered branch/worktree, opens the PR from that branch, and keeps
 addressing checks and review comments until the PR is merge-ready.
 
 ## Create A Steward
