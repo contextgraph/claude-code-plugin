@@ -85,7 +85,7 @@ initialization artifacts.
 
 - **Persistent Action Management**: Create, update, and track actions across sessions
 - **Repository-Native Steward Definition**: Use `/steward:define-steward` to inspect a repo, create a rubric-centric steward with `configure_steward`, reconcile inventory, and initialize the steward from Claude Code
-- **Backlog Execution Loop**: Use `/steward:work-top-backlog-item` to claim a Steward backlog item — the repository-wide top item by default, a specific item you name, or the top item within a single steward's purview — prepare its branch/worktree, open the linked PR, and keep working review feedback and CI until the PR is merge-ready
+- **Backlog Execution Loop**: Use `/steward:work-top-backlog-item` to claim a Steward backlog item — the repository-wide top item by default, a specific item you name, or the top item within a single steward's purview — prepare its branch/worktree, open the linked PR, and keep working through review feedback and CI checks until the PR is merge-ready
 - **Plan Review With Stewards**: Use `/steward:plan-review` to consult the repository's stewards on a proposed plan before implementation, surface their attributed concerns, and propose a new steward when the plan introduces an unowned domain such as a new integration
 - **Hierarchical Planning**: Organize work in parent-child relationships
 - **Dependency Tracking**: Manage action dependencies and execution order
