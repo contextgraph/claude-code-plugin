@@ -94,6 +94,14 @@ mission and rubric. After creation, Claude will continue the activation flow in
 the coding agent by reconciling inventory, previewing initialization artifacts,
 and saving those artifacts only after you approve them.
 
+If the steward will cover more than the repository you launched from — scoped
+to several repos, or to the whole workspace — the skill inspects **every**
+covered repository before grounding the zone, inventory, and evidence, not just
+the current checkout. For each repo beyond the current one it resolves a local
+checkout (a sibling directory it confirms by git remote), offers a read-only
+clone, or asks where the checkout lives, so the steward is grounded in real
+code from every repo it watches.
+
 Smoke-test prompt:
 
 ```text
