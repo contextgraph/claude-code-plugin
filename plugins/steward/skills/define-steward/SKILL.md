@@ -316,7 +316,8 @@ After inventory reconciliation, or immediately after create when there is no inv
         "objective": "What should change or be checked.",
         "rationale": "Why this matters for the steward's domain.",
         "file_paths": ["path/to/file.ts"],
-        "priority_category": "should"
+        "priority_category": "should",
+        "intended_deliverable": "pull_request"
       }
     ]
   }
@@ -326,6 +327,8 @@ After inventory reconciliation, or immediately after create when there is no inv
 Show the preview to the user. After approval, call the same payload with `action: "apply_initialization"`.
 
 Backlog items must be specific and grounded in files the agent inspected. Use `must`, `should`, or `could` for `priority_category`. Zero backlog items is acceptable when the steward is ready but there is no honest first action.
+
+Set `intended_deliverable` to declare the artifact the item is expected to produce — `pull_request` for code-change work (the default and the common case) or `note` for an investigation, verification, or learning item whose deliverable is a recorded finding rather than a code change (the answer is the deliverable). Reach for `note` when the title frames a question to answer — "Find out whether X is gated", "Confirm Y handles concurrent writes", "Map where Z fans out" — and the honest outcome is a recorded finding even if it turns out nothing needs to change. Reach for `pull_request` (or omit the field) when the item names a code change the steward expects to ship. Mix both kinds freely on the same initialization: a measurement gap is usually a `pull_request` to add instrumentation, while a coverage audit of an unfamiliar surface is usually a `note`. In the preview, name each item's deliverable type so the user can correct the framing before approval.
 
 ## Spec Contract
 
