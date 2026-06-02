@@ -128,6 +128,29 @@ Use `--path <path>` only when the user requested a specific location. Use `--in-
 17. If reviewers or stewards leave actionable comments, address them in code or explain why no code change is appropriate, then push and re-check.
 18. Repeat until required checks pass, review threads are resolved or answered, and the PR is not draft, blocked, or conflicted.
 19. Report the PR URL, final validation state, and any merge blockers that remain outside the agent's control.
+20. On a clean finish, close with the backlog stat line (see **Closing Stat Line**).
+
+## Closing Stat Line
+
+When the item is delivered and the PR is merge-ready, end with a short backlog stat line — a quick reward for finishing one item and an invitation to take the next. Only show it on a clean finish; skip it if you released, dismissed, or stopped with merge blockers still outstanding.
+
+Gather the numbers cheaply — this is a closing flourish, not a second report:
+
+- `list_stewards` (pass `repository`) for the repository-wide queued/done counts and the active steward count. Reuse the backlog summaries it returns rather than re-listing every steward's items.
+- `manage_backlog_work` with `action: "peek"` and no `identifier` for the next eligible top item's objective and owning steward. Peek is read-only and does not claim anything.
+
+Keep it to one or two lines: the backlog state, the next item, and a single invitation to run the skill again. Do not expand it into a status report. Example:
+
+```text
+✓ Backlog: 6 queued across 3 stewards · 13 done. Next up: "Cache verdict lookups in review-policy" (testing steward).
+Run /steward:work-top-backlog-item again to take it.
+```
+
+If the queue is now empty, say so and stop — no invitation to extend:
+
+```text
+✓ Backlog: 0 queued. The queue is clear — nothing left to claim.
+```
 
 ## PR Monitoring Loop
 
