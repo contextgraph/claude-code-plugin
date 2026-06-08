@@ -3,7 +3,7 @@ name: work-backlog
 description: Use when the user wants Claude Code to work a Steward backlog item end-to-end. Works the repository-wide top item by default, or a specific item the user names (by id or human-readable reference), or the top item within a single steward's purview (by steward name or id). Claim the chosen item through the Steward MCP server, create the correct local branch/worktree, implement the work, open a linked PR, monitor PR checks and review threads, address feedback, and continue until the PR is green and merge-ready.
 ---
 
-# Work Top Backlog Item
+# Work Backlog
 
 Use this skill when the user asks to work the next/top Steward backlog item, work a specific named item, work the top item belonging to a particular steward, run the Steward queue, or continue a claimed Steward backlog PR until it is merge-ready.
 
@@ -114,7 +114,7 @@ steward backlog setup <backlog-id-or-reference> --base-ref origin/main
 
 Use `--path <path>` only when the user requested a specific location. Use `--in-place` only when repository policy or the user's request requires the current checkout. If the CLI helper is unavailable, create the worktree manually from `origin/main` with the exact registered branch.
 9. Move into the prepared worktree/branch and confirm it is clean and based on the intended base with `git status --short --branch`.
-10. **Plan-review with the steward, then implement.** Before writing code, draft a short implementation plan for the claimed item and plan-review it with the owning steward using the `consult` MCP tool (scope the consult to the claimed item's steward and reference the item). Confirm the approach actually resolves the concern through that steward's lens, and fold its guidance into the plan. The steward's planning input is the highest-value part of working its item — do not skip this consult. Then implement against the reviewed plan, using normal repository practice and keeping scope tied to the claimed item and its steward lens.
+10. **Plan-review with the steward, then implement.** Before writing code, draft a short implementation plan for the claimed item and plan-review it with the owning steward using the `consult` MCP tool (scope the consult to the claimed item's steward and reference the item). Run this consult *after* the claim in step 5/6, against that exact already-claimed item — do not re-select or re-resolve the item here, so the consulted item and the claimed item can never diverge. Confirm the approach actually resolves the concern through that steward's lens, and fold its guidance into the plan. The steward's planning input is the highest-value part of working its item — do not skip this consult. Then implement against the reviewed plan, using normal repository practice and keeping scope tied to the claimed item and its steward lens.
 11. Run the repository's required local validation. If no repository-specific contract exists, run the relevant build, test, lint, and typecheck commands. For this project, prefer the local CI-equivalent command when available.
 12. Commit the change and push the claim branch.
 13. Open a PR targeting `main`. The PR body must include:
