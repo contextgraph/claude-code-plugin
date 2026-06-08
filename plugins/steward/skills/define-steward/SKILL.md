@@ -185,7 +185,7 @@ Good next steps:
 4. Update CLAUDE.md or relevant skills so Claude uses consult for steward advice before implementation starts.
 ```
 
-If `/steward:work-top-backlog-item` is available, mention it as the fastest path for working the first backlog item — but scope the suggestion to the steward you just created, not the repository-wide top item. The repository's global top item may belong to a different steward, so tell the user to name this steward (or a specific new item) when invoking it, for example: "work the top backlog item for the <steward-name> steward" or "work the <item-reference> item". If that skill is not available, offer to inspect this steward's new backlog items and help choose one manually.
+If `/steward:work-backlog` is available, mention it as the fastest path for working the first backlog item — but scope the suggestion to the steward you just created, not the repository-wide top item. The repository's global top item may belong to a different steward, so tell the user to name this steward (or a specific new item) when invoking it, for example: "work the top backlog item for the <steward-name> steward" or "work the <item-reference> item". If that skill is not available, offer to inspect this steward's new backlog items and help choose one manually.
 
 If the user wants to define another steward, restart this skill from the beginning and preserve the same principle: ask whether they already have a zone or want repository-grounded suggestions.
 
