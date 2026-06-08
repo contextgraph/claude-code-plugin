@@ -80,7 +80,7 @@ Each prototype still has to pass the narrowness test for this specific repositor
    Keep the resolved workspace slug from the readiness response. You will use it later to link the user directly to the steward page.
 2. Call `list_stewards` and filter to stewards scoped to this repository. If there are none scoped to this repo, deliver the first-steward orientation above before anything else — reach, rubric, vigilance, in 3-5 sentences. This is a hard step, not a soft suggestion. Do not skip it when `list_stewards` is unavailable; deliver the orientation by default.
 3. Ask how the user wants to find the zone — their own idea (A), a battle-tested prototype (B), or repository-grounded suggestions from recent work (C) — unless they already answered that in the prompt.
-4. Inspect the repository before drafting anything.
+4. Inspect every repository the steward will cover before drafting anything — not just the current checkout. Resolve access to each repo in scope first; see _Covered Repositories_ below.
 5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture"; if the user wants one of those, decompose it into a narrow lens that passes the narrowness test.
 6. Before defining metrics or creating metric-related backlog items, call the `integration` MCP tool with `action: "list_measurement_capabilities"` for the resolved workspace or repository. Cross-reference the returned `providers` list against vendor SDKs and config you found during inspection; for any provider the repository uses whose workspace status is `not_configured`, surface the integration opportunity with the direct connection URL before drafting metrics. See _Integration Opportunities_ below.
 7. Draft a spec. Only include currently sampleable metrics in `spec.metrics`; aspirational metrics belong in initialization backlog items until a real sampling path exists.
@@ -99,9 +99,25 @@ Each prototype still has to pass the narrowness test for this specific repositor
 
 If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, metrics, or evidence.
 
+## Covered Repositories
+
+A steward's `spec.repositories` can name more than the repository you launched from, and an empty array scopes it to **every** installed repository in the workspace. The ownership zone, rubric, inventory, evidence, metrics, and initialization artifacts are only honest when they are grounded in the actual code of every repository the steward covers — not just the current checkout. A steward that watches three repos but whose inventory catalogs only one is blind to two-thirds of its zone from day one.
+
+Once the repository scope is settled, resolve and inspect each covered repository before drafting anything that claims to be grounded:
+
+- **Current checkout** — the repository you launched in, identified from the local git remote. Always available.
+- **Other covered repos** — for each additional `owner/repo` in scope, get read access before you inspect it. In order of preference:
+  1. **Find an existing local checkout.** Search one level up from the current repo: list the current repo's parent directory (`..`) and check for a directory named after the repo (`../<repo>`), then check the other directories in that same parent. Do not recurse the whole filesystem; if nothing matches one level up, go to the next option rather than searching deeper. The directory name is only a hint — confirm it with the remote check below before trusting it.
+  2. **Offer a read-only clone.** With the user's go-ahead, `git clone` it into a sibling or temporary directory and inspect that.
+  3. **Ask the user** where the checkout lives, then validate the path they give you the same way.
+  Validate the remote before trusting any directory you find: run `git -C <dir> remote get-url origin` and normalize both sides to the bare `owner/repo` slug — lowercase it, strip a trailing `.git`, and accept either form (`git@github.com:owner/repo`, `https://github.com/owner/repo`). A match on that normalized slug is sufficient; the full URL and protocol do not need to match. If `origin` does not match, check the directory's other remotes (`git -C <dir> remote -v`); if none resolve to the covered slug, treat the directory as not found and fall through to the next option. A same-named directory whose remote points elsewhere is not the repo.
+- **Workspace-wide stewards** (empty `repositories`) — enumerate the installed repositories from the `prepare_steward_onboarding` / `list_stewards` response, then resolve access to each the same way. If there are too many to inspect, narrow the scope to the repositories the zone actually touches, or be explicit that the inventory and evidence are seeded only from the repos you could read.
+
+Never fabricate inventory rows, evidence anchors, or metrics for a repository you have not actually read. If you cannot get access to a covered repository, tell the user which one and why, then either narrow `spec.repositories` to drop it or proceed with the covered set explicitly noted — do not paper over the gap with generic entries.
+
 ## Repository Inspection
 
-Read the actual repository, not generic best practices. At minimum:
+Read the actual code of every repository the steward will cover (see _Covered Repositories_ above for resolving access to repos beyond the current checkout), not generic best practices. Run this checklist against each covered repository. At minimum:
 
 - Top-level orientation: `README`, `AGENTS.md` / `CLAUDE.md`, `docs/`, and root scripts such as `package.json`, `pyproject.toml`, or `go.mod`.
 - Layout: the top directories under `app/`, `src/`, `lib/`, `pkg/`, or wherever the code lives. Note heavy-traffic and quiet areas.
@@ -282,6 +298,8 @@ If the next action is `reconcile_inventory`, call:
 
 Use stable keys that will still make sense after files move. Prefer keys such as route names, event names, API names, workflow names, or component names over raw file paths. Do not send duplicate keys.
 
+When the steward covers more than one repository, reconcile inventory across **all** of them, not just the current checkout (see _Covered Repositories_). Prefix every entry key with the repository slug so a row read on every review is never mistaken for the wrong repository's: `<owner>/<repo>:<stable-key>` — for example `contextgraph/actions:route:login` and `contextgraph/web:route:login` are two distinct rows. Apply the prefix consistently to **every** entry once the steward covers more than one repo, including the current checkout, so keys parse and sort uniformly; a single-repo steward does not need the prefix. Keep the human-readable `name` clear about the repo too when the same path or name exists in more than one repo.
+
 Keep each row lean enough to read on every review: the current contract (catalog) or current status and why (coverage), plus paths and dimension anchors. Leave change history for notes, open work for the backlog, and provider telemetry for heartbeat-derived metrics. A row that needs a paragraph of PR-by-PR narrative is carrying material that belongs elsewhere — the write-time per-row size limit will reject it, and the fix is to move that material out, not to split the fact across keys.
 
 Before drafting or previewing initialization artifacts, show a steward readiness review and ask whether it looks right.
@@ -459,6 +477,7 @@ Update mode can change identity, repository scope, ownership zone, rubric dimens
 ## Guardrails
 
 - Prefer repository evidence over generic best practices.
+- A steward is only as grounded as the repositories you actually read. When `spec.repositories` covers more than the current checkout — or is empty, meaning every installed repository — inspect each covered repo (a sibling checkout, a read-only clone, or a path the user gives you) before drafting inventory, evidence, metrics, or initialization artifacts. Never fabricate grounded artifacts for a covered repository you could not read; narrow the scope or note the gap instead. See _Covered Repositories_.
 - If this is the user's first steward in this repository, deliver the reach / rubric / vigilance orientation before any zone proposal, suggestion menu, or opening question. The orientation is required, not optional, even when `list_stewards` is unavailable.
 - Offer the three entry modes — the user's own zone (A), a battle-tested prototype (B), or recent-work suggestions (C) — before generating a zone menu, unless the user already chose one.
 - Narrowness is the admission test for every steward, in all three modes. Decompose broad headings instead of rejecting the topic.
