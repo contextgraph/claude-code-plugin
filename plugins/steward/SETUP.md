@@ -40,7 +40,13 @@ Check that the skill is available:
 Check that the backlog execution skill is available:
 
 ```text
-/steward:work-top-backlog-item
+/steward:work-backlog
+```
+
+Check that the plan-review skill is available:
+
+```text
+/steward:plan-review
 ```
 
 If you are upgrading from an older install, update or reinstall the plugin,
@@ -70,15 +76,15 @@ Claude Code will use the Steward MCP server to create persistent actions that su
 To work the current top Steward backlog item end-to-end, run:
 
 ```text
-/steward:work-top-backlog-item
+/steward:work-backlog
 ```
 
 With no target it claims the repository-wide top item. To scope the work, name
 a steward or a specific item when you invoke it, for example:
 
 ```text
-/steward:work-top-backlog-item work the top item for the API-contract steward
-/steward:work-top-backlog-item work the "knip baseline" item
+/steward:work-backlog work the top item for the API-contract steward
+/steward:work-backlog work the "knip baseline" item
 ```
 
 Then Claude Code claims the chosen item with the Steward MCP server, prepares
