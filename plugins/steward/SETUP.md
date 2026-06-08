@@ -24,6 +24,13 @@ Check that the MCP server is connected and authenticated:
 You should see `steward` listed. Complete the browser authentication handoff if
 Claude Code prompts for it.
 
+> **If the auth URL won't paste cleanly:** Claude Code normally opens your
+> browser automatically. When it can't (common over SSH or remote terminals),
+> it prints a long URL to copy instead — and long URLs can wrap or mangle when
+> copied out of some terminals. If pasting it fails, just ask Claude:
+> **"open that authentication URL in my browser"** — it opens the exact link
+> directly and auth completes.
+
 Check that the skill is available:
 
 ```text
