@@ -73,23 +73,31 @@ Create an action to implement user authentication
 
 Claude Code will use the Steward MCP server to create persistent actions that survive across sessions.
 
-To work the current top Steward backlog item end-to-end, run:
+To make progress on a Steward backlog, run:
 
 ```text
 /steward:work-backlog
 ```
 
-With no target it claims the repository-wide top item. To scope the work, name
-a steward or a specific item when you invoke it, for example:
+With **no argument** it runs a conversational session: it shows your current
+backlog, asks what you want to accomplish (scope, how many items, whether to
+open PRs or also merge), does that work, and then hands you a parameterized
+command you can schedule as a nightly routine.
+
+With an **argument** it runs directly, no conversation — a specific item, a
+steward's top item, or a bounded batch:
 
 ```text
-/steward:work-backlog work the top item for the API-contract steward
 /steward:work-backlog work the "knip baseline" item
+/steward:work-backlog work the top item for the API-contract steward
+/steward:work-backlog --max-items 3 --autonomy pr
 ```
 
-Then Claude Code claims the chosen item with the Steward MCP server, prepares
-the registered branch/worktree, opens the PR from that branch, and keeps
-addressing checks and review comments until the PR is merge-ready.
+A run tends the backlog PRs already in flight (resolving conflicts, fixing CI,
+dismissing work that turns out already done), claims and implements queued
+items through linked PRs, and reports what it did plus the decisions left for
+you. Schedule the batch form as a nightly Claude Code Routine to wake up to a
+backlog report.
 
 ## Create A Steward
 

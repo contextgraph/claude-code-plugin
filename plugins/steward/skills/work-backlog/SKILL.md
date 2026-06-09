@@ -1,186 +1,174 @@
 ---
 name: work-backlog
-description: Use when the user wants Claude Code to work a Steward backlog item end-to-end. Works the repository-wide top item by default, or a specific item the user names (by id or human-readable reference), or the top item within a single steward's purview (by steward name or id). Claim the chosen item through the Steward MCP server, create the correct local branch/worktree, implement the work, open a linked PR, monitor PR checks and review threads, address feedback, and continue until the PR is green and merge-ready.
+description: Use when the user wants Claude Code to make progress on a Steward backlog. Two modes. With NO arguments it runs a conversational session — it shows the current backlog, asks what the user wants to accomplish (scope, how much, autonomy), does that work, then hands back a parameterized command to schedule as a nightly routine. With ARGUMENTS it runs directly with no conversation — a specific item (by id or reference), a steward's top item (by name/id), or a batch session (a max item count + scope + autonomy) suitable for an unattended nightly Claude Code Routine. A run tends in-flight backlog PRs (resolving conflicts, fixing CI, catching superseded work), claims and implements queued items through linked PRs, reconciles items whose work is already done, and reports what was done plus the decisions the user must make.
 ---
 
 # Work Backlog
 
-Use this skill when the user asks to work the next/top Steward backlog item, work a specific named item, work the top item belonging to a particular steward, run the Steward queue, or continue a claimed Steward backlog PR until it is merge-ready.
+Make progress on a Steward backlog: tend the PRs already in flight, start new items, keep each linked PR moving toward merge-ready, and dismiss items whose work is already done. The skill is **stateless** — every run is configured entirely by its arguments, never by saved state, so different people can run it different ways at different times.
 
-## Selecting The Work
+## Modes of Invocation
 
-Before claiming, decide which item the user wants. Read any argument or natural-language target the user provided when invoking the skill and pick exactly one of three modes:
+Route on whether the user passed an argument:
 
-1. **Repository-wide top item (default).** No target given. Claim the highest-priority eligible item across the whole repository. This is the original behavior.
-2. **A specific item.** The user named a concrete backlog item — an id, a group id, or a human-readable reference such as a title fragment. Claim that exact item.
-3. **A steward's top item.** The user scoped the work to a steward ("work the top item for the API-contract steward", "ship the testing steward's next item", or invoking right after defining a new steward). Claim the highest-priority eligible item within that steward's purview.
+- **No argument → Conversational session.** Show the current backlog, ask what they want to accomplish, do the agreed work, and end by emitting the exact command to schedule as a nightly routine. This is the guided, discover-by-talking entry point (the same shape as `/steward:define-steward`).
+- **Argument(s) given → Direct run, no conversation.** Parse the arguments into a run config and execute. This is what an unattended nightly Claude Code Routine calls, and what the heartbeat email's one-paste command uses. Three argument shapes:
+  - **A specific item** — an id, group id, or human-readable reference. Work that one item.
+  - **A steward** — a steward name or id. Work that steward's top eligible item.
+  - **Batch params** — a max item count and/or scope and/or autonomy (e.g. `--max-items 3 --steward accessibility --autonomy pr`, or natural language like "work 3 accessibility items, open PRs, don't merge"). Run a batch session.
 
-If the request is ambiguous between modes — for example a name that could be a steward or an item — resolve it with `list_stewards` and `list_steward_backlog_items` before claiming, and ask the user only if it stays ambiguous.
+If an argument is ambiguous between shapes (a name that could be a steward or an item), resolve it with `list_stewards` and `list_steward_backlog_items` before acting; ask only if it stays ambiguous.
 
-### Resolving a specific item (mode 2)
+## Run Config (the parameters)
 
-If you already have an id or unambiguous reference, claim it directly (see below). If you only have a fuzzy reference, list candidates first so you claim the right one:
+Every direct run resolves to these. The conversational session fills them by asking; a routine command sets them explicitly. There is no persisted profile — the command line is the entire config.
 
-- Use `list_steward_backlog_items` (filter `states: ["queued"]`) to find the matching item and capture its id/reference.
-- If the reference matches more than one queued item, show the candidates and ask the user which one.
+- **scope** — repository-wide (default), a single `--steward <name|id>`, or a single named item.
+- **max-items** — how many items the run may work before stopping (default **3** for a batch; exactly **1** for a single named item). Bounds an unattended run so a cron can't run unbounded.
+- **autonomy** — how far each item goes:
+  - `pr` (**default, and the only safe default for an unattended run**): implement, open a linked PR, stop. A human merges.
+  - `merge`: additionally merge a PR once it is green and review-clean. Opt-in, higher trust — never the default for a routine that runs while the user is asleep.
 
-### Resolving a steward's top item (mode 3)
+## Conversational Session (no arguments)
 
-1. Resolve the steward with `list_stewards`. Match on the name or id the user gave. Pass `repository` when you belong to multiple workspaces. If no steward matches, say so and list the available stewards instead of guessing.
-2. List that steward's queue with `list_steward_backlog_items`:
+1. Show the current backlog up front so the conversation is grounded: call `list_stewards` (pass `repository`) for queued/in-flight/done counts per steward, and note any in-flight backlog PRs. Lead with this, not with questions.
+2. Ask what they want to accomplish, mapping their answer onto the run config: **scope** (whole repo, one steward, one item?), **how much** (how many items, or "just the top one"?), **autonomy** (open PRs and stop, or also merge what's green?). Keep it to the few questions that actually change the run; infer sane defaults for the rest and state them.
+3. Run the agreed work using the **Direct Run** sections below (single item or batch).
+4. **End by emitting the nightly routine command** — see **Emitting the Routine Command**. The point of the conversation is not just to do tonight's work; it is to hand the user the reproducible command so they can schedule it and stop typing it.
 
-```json
-{
-  "steward_id": "<resolved-steward-id>",
-  "states": ["queued"]
-}
+## Reconciliation (always on, both modes)
+
+Backlog items go stale: the work gets done by other changes before the item is worked. Catching this is cheap here (you have the repo and the diffs) and expensive anywhere else, so it is a standing part of every run, not a flag.
+
+- **Before implementing any claimed item**, verify the work is not already done. Check recent merged PRs, `git log`, and the actual current code for the item's objective. If the objective is already satisfied, do **not** implement or open a PR — `dismiss` the item with `manage_backlog_work` and a concrete, evidence-backed note naming what already did the work (the commit/PR), and move on.
+- **When tending an in-flight PR** (see batch session) you find merge conflicts or staleness, and resolving them reveals the work was superseded by more recent changes, treat that as the same signal: dismiss the backlog item with evidence and surface the PR as one to **close, not merge** (do not close someone's PR autonomously — flag it in the report as a decision for the user).
+- Never dismiss on a fuzzy hunch. Dismissal requires a specific artifact (a merged PR, a commit, code that already implements the objective). When unsure, leave the item and note the uncertainty in the report.
+
+## Direct Run — Single Item (a specific item or a steward's top item)
+
+This is the original single-item behavior and the path the heartbeat email's one-paste command uses.
+
+### Selecting the item
+- **Specific item.** If you have an id or unambiguous reference, use it directly. For a fuzzy reference, list candidates with `list_steward_backlog_items` (filter `states: ["queued"]`) and confirm before claiming; if it matches more than one, show the candidates and ask.
+- **A steward's top item.** Resolve the steward with `list_stewards` (pass `repository` across multiple workspaces; if none matches, say so and list available stewards rather than guessing). List its queue with `list_steward_backlog_items` (`states: ["queued"]`), take the highest-priority queued item. If the steward's queue is empty, say so and stop; do not fall back to the repo-wide top item unless asked.
+
+### Working the item
+1. Inspect repository instructions first: `AGENTS.md`, `CLAUDE.md`, README, package scripts, CI docs.
+2. Check for an existing local branch or open PR for a previously claimed item; continue it rather than claiming a second one unless the user asked for a new claim.
+3. **Claim** with `manage_backlog_work` (`action: "claim"`). Omit `identifier` for the repo-wide top item; pass the resolved id/reference for a specific item or a steward's top item. Register the branch you will push (prefer the branch returned by a prior `peek`; else `steward/<short-task-slug>`).
+4. Read the claim response: capture backlog identifier, steward, repository URL, objective, rationale, and registered branch. Confirm it is the item you intended.
+5. `git fetch origin`. Prepare the local workspace on the exact registered branch — prefer `steward backlog setup <backlog-id-or-reference> --base-ref origin/main`; else create the worktree manually from `origin/main` with that exact branch. Confirm clean and correctly based with `git status --short --branch`.
+6. **Reconcile (see above): is this already done?** If yes, dismiss with evidence and stop here.
+7. **Plan-review with the steward via `consult`, then implement.** Draft a short implementation plan for the claimed item and consult the owning steward against that exact already-claimed item — do not re-select or re-resolve the item, so the consulted and claimed item can never diverge. Fold its guidance in; the steward's planning input is the highest-value part of working its item. Then implement against the reviewed plan, scope tied to the claimed item and its steward lens.
+8. Run the repository's required local validation (build, test, lint, typecheck — prefer the local CI-equivalent command when one exists).
+9. Commit and push the claim branch.
+10. Open a PR targeting `main` with a concise summary and validation results. Verify the PR head branch is the registered claim branch — branch matching is the Steward backlog link.
+11. Monitor the PR with the **PR Monitoring Loop** until merge-ready (single-item mode babysits to green; batch mode does not — see below).
+12. If `autonomy: merge` and the PR is green, review-clean, and not draft/blocked/conflicted, merge it. Otherwise leave it for the user.
+13. On a clean finish, close with the **Closing Stat Line**.
+
+## Direct Run — Batch Session (max-items + scope, or a nightly routine)
+
+A bounded session that makes broad progress, in two phases, then reports. This is the shape a nightly routine runs.
+
+**Phase 1 — Tend in-flight PRs first.** Finish what is already started before beginning new work. For each backlog item in `proposed` / `in_progress` with an open linked PR, within scope:
+- Inspect the PR (`gh pr view --json reviews,comments,reviewDecision,mergeStateStatus,statusCheckRollup`, `gh pr checks`).
+- If conflicted: update from `main` and resolve. **If resolving reveals the work was superseded** (the #3078 case), reconcile: dismiss the item with evidence and flag the PR to close in the report. Do not merge or close it autonomously.
+- If CI is red: read logs, fix, validate locally, push.
+- If there is actionable review/steward feedback: address it or answer it, validate, push.
+- If green and `autonomy: merge`: merge. Otherwise record its state for the report.
+
+**Phase 2 — Start new items.** With remaining budget (`max-items` minus items already advanced in phase 1), claim and work queued items via the **Single Item** workflow above (reconcile → consult → implement → PR), highest priority first, within scope. In batch mode do **not** babysit each PR to green — open the linked PR, capture its CI/review state, and move to the next item. Stop when `max-items` is reached or the queue (within scope) is empty.
+
+**Phase 3 — Report.** Emit the **Morning Report**.
+
+Claim one item at a time; never hold multiple active claims. Respect `max-items` as a hard stop so an unattended run is bounded.
+
+## Morning Report
+
+The deliverable of a batch / routine run — what the user wakes up to. Keep it scannable, three sections:
+
+1. **Done** — items completed this run: each with its title, the PR (number + link), and CI state. Items dismissed as already-done, with the artifact that superseded them.
+2. **In flight** — backlog-driven PRs still open: each with number + link and current state (green / CI red / conflicted / awaiting review).
+3. **Your call** — decisions only the user can make: PRs to merge, PRs flagged redundant to close (with the superseding PR), blocked items needing a human, anything the run deliberately left.
+
+If nothing needed doing (no in-flight PRs to tend, queue empty within scope), say so in one line rather than padding the report.
+
+## Emitting the Routine Command
+
+At the end of a **conversational session**, print the exact command that reproduces the run config you just agreed on, so the user can schedule it as a nightly Claude Code Routine and never type it again. Use the flag grammar so it is reproducible:
+
+```text
+Schedule this nightly (Claude Code Routine) to wake up to a backlog report:
+
+  /steward:work-backlog --max-items 3 --autonomy pr
+
+(scope: whole repo · opens PRs, never merges · catches superseded items)
 ```
 
-3. Pick the highest-priority queued item (the first returned for that steward unless the user named a different one) and capture its id/reference.
-4. If the steward has no queued items, say the steward's queue is empty and stop; do not fall back to the repository-wide top item unless the user asks.
-
-The Steward MCP server must be connected. If Steward MCP tools are unavailable, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it. Use the Steward CLI only as a fallback for local workspace helpers such as `steward backlog setup`; do not use it for Steward backlog lifecycle state. The GitHub CLI must be available and authenticated for PR creation, checks, and review inspection.
+Adjust the flags to the agreed config (`--steward <name>` for a single steward, `--autonomy merge` if they opted into auto-merge, a different `--max-items`). Always state in one line what the command will and will not do, so scheduling it is an informed choice.
 
 ## Steward MCP Tools
 
-Use `manage_backlog_work` as the normal Steward execution lifecycle tool:
+The Steward MCP server must be connected. If its tools are unavailable, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if prompted. Use the Steward CLI only as a fallback for local helpers such as `steward backlog setup`; never for backlog lifecycle state. `gh` must be available and authenticated for PR creation, checks, and review inspection.
 
-- `action: "peek"` - inspect top eligible work without changing state.
-- `action: "claim"` - claim eligible work and register the branch that will be pushed. With no `identifier` it claims the repository-wide top item (mode 1). With an `identifier` (item id, group id, or human-readable reference) it claims that exact item (modes 2 and 3).
-- `action: "release"` - unclaim work when pausing or abandoning before completion.
-- `action: "dismiss"` - dismiss obsolete, impossible, or unsafe work with an evidence-backed reason.
+Use `manage_backlog_work` as the execution lifecycle tool:
 
-Use `list_stewards` and `list_steward_backlog_items` to resolve a named steward and find the item id/reference to pass as `identifier` when the user targets a specific item or a steward's purview. These are reads — they do not change state.
+- `action: "peek"` — inspect top eligible work without changing state.
+- `action: "claim"` — claim eligible work and register the push branch. No `identifier` claims the repo-wide top item; an `identifier` (item id, group id, or reference) claims that exact item.
+- `action: "release"` — unclaim when pausing or abandoning before completion.
+- `action: "dismiss"` — dismiss obsolete, impossible, superseded, or unsafe work with an evidence-backed reason. Item dismiss returns `result: "dismissed"`, `target_type: "item"`, `backlog_item_id`, `steward_id`; group dismiss returns `result: "dissolved"`, `target_type: "group"`, `group_id`.
 
-`dismiss` accepts a backlog item identifier or a backlog group identifier. Item dismiss responses return `result: "dismissed"`, `target_type: "item"`, `backlog_item_id`, and `steward_id`. Group dismiss responses return `result: "dissolved"`, `target_type: "group"`, and `group_id`.
-
-Use `list_steward_backlog_items`, `update_steward_backlog_item`, and `create_steward_backlog_item` only for steward maintenance outside the normal execution lifecycle.
-
-The MCP surface does not create local git worktrees or open GitHub PRs. Use git and `gh` for those steps.
+`list_stewards` and `list_steward_backlog_items` are reads — use them to resolve a named steward or find an item id/reference. Use `update_steward_backlog_item` / `create_steward_backlog_item` only for maintenance outside the normal lifecycle. The MCP surface does not create git worktrees or open PRs; use git and `gh` for those.
 
 ## Operating Rules
 
 - Claim exactly one backlog item at a time.
-- Plan-review with the steward (via `consult`) before implementing. The steward's planning input is the point of working its item, not an optional extra — skipping it discards the steward's highest-value contribution.
-- Start from latest `origin/main` unless repository instructions explicitly say otherwise.
-- Use the branch returned by `manage_backlog_work`; it is the claim target expected by Steward.
-- Use `steward backlog setup` when available to create the local worktree for an already-claimed item. If you create the worktree manually, use the exact claimed branch.
-- Do not abandon a claimed item silently. If the item is invalid, dismiss it with a concrete note. If you must pause or cannot continue, unclaim it with a concrete note to the user.
-- Keep the PR linked to the backlog item through the registered claim branch. Open and push the PR from that exact branch.
-- Continue after the PR is open. Do not stop at PR creation unless the user explicitly asks you to stop there.
+- Reconcile before implementing — never build work that is already done.
+- Plan-review with the steward (via `consult`) before implementing, against the already-claimed item. This is the point of working its item, not an optional extra.
+- Start from latest `origin/main` unless repository instructions say otherwise. Use the exact branch returned by `manage_backlog_work`; the PR link is the branch match.
+- Never abandon a claimed item silently: dismiss invalid/superseded work with a concrete note, or `release` with a note if you must pause.
+- Continue after a PR is open (single-item mode) until merge-ready; in batch mode, capture PR state and move on.
+- Respect `max-items` as a hard stop. Never auto-merge unless `autonomy: merge` was explicitly set.
+- Never close another person's PR autonomously — flag it for the user.
 
-## Workflow
+## PR Monitoring Loop
 
-1. Inspect repository instructions first: `AGENTS.md`, `CLAUDE.md`, README, package scripts, and CI docs.
-2. Inspect any existing local branch or open PR for a previously claimed Steward backlog item. If you can identify an active claimed item for this repository/user, continue it instead of claiming a second one unless the user explicitly asks for a new claim.
-3. Decide which item to claim using the **Selecting The Work** modes above. Resolve a specific item or a steward's top item now (via `list_stewards` / `list_steward_backlog_items`) and capture its id/reference. For the repository-wide default, peek top work with `manage_backlog_work` when you need context before naming the branch:
+Use after every push in single-item mode (batch mode opens the PR and moves on):
 
-```json
-{
-  "action": "peek",
-  "repositories": ["owner/repo-or-github-url"]
-}
+```text
+while PR is not merge-ready:
+  inspect CI status and review/comment state
+  if CI failed:            read failing logs, fix, validate locally, commit, push
+  else if review actionable: address or answer, validate if code changed, commit, push
+  else if behind/conflicted: update from main, resolve, validate, push
+  else if checks pending:   wait and poll again
+  else:                     mark merge-ready
 ```
 
-4. Choose the branch you will push. Prefer the branch returned by peek. If no peek was needed, use repository branch policy or a conservative branch such as `steward/<short-task-slug>`.
-5. Claim the chosen item with `manage_backlog_work`. For the repository-wide top item, omit `identifier`:
-
-```json
-{
-  "action": "claim",
-  "repositories": ["owner/repo-or-github-url"],
-  "branch": "steward/<short-task-slug>"
-}
-```
-
-   For a specific item or a steward's top item, pass the resolved id/reference as `identifier`:
-
-```json
-{
-  "action": "claim",
-  "repositories": ["owner/repo-or-github-url"],
-  "branch": "steward/<short-task-slug>",
-  "identifier": "<backlog-item-id-or-reference>"
-}
-```
-
-6. Read the claim response carefully. Capture the backlog identifier/reference, steward, repository URL, objective, rationale, and registered branch. Confirm the claimed item is the one you intended — if you targeted a specific item or steward, verify the response matches before proceeding.
-7. Fetch the target repository: `git fetch origin`.
-8. Prepare the local workspace using the exact registered branch. Prefer the CLI helper when available:
-
-```bash
-steward backlog setup <backlog-id-or-reference> --base-ref origin/main
-```
-
-Use `--path <path>` only when the user requested a specific location. Use `--in-place` only when repository policy or the user's request requires the current checkout. If the CLI helper is unavailable, create the worktree manually from `origin/main` with the exact registered branch.
-9. Move into the prepared worktree/branch and confirm it is clean and based on the intended base with `git status --short --branch`.
-10. **Plan-review with the steward, then implement.** Before writing code, draft a short implementation plan for the claimed item and plan-review it with the owning steward using the `consult` MCP tool (scope the consult to the claimed item's steward and reference the item). Run this consult *after* the claim in step 5/6, against that exact already-claimed item — do not re-select or re-resolve the item here, so the consulted item and the claimed item can never diverge. Confirm the approach actually resolves the concern through that steward's lens, and fold its guidance into the plan. The steward's planning input is the highest-value part of working its item — do not skip this consult. Then implement against the reviewed plan, using normal repository practice and keeping scope tied to the claimed item and its steward lens.
-11. Run the repository's required local validation. If no repository-specific contract exists, run the relevant build, test, lint, and typecheck commands. For this project, prefer the local CI-equivalent command when available.
-12. Commit the change and push the claim branch.
-13. Open a PR targeting `main`. The PR body must include:
-    - concise summary
-    - validation results
-14. Verify the PR head branch is the registered claim branch. Branch matching is the Steward backlog link.
-15. Monitor the PR until merge-ready:
-    - Use `gh pr checks --watch` or repeated `gh pr checks` for CI.
-    - Use `gh pr view --comments --json reviews,comments,reviewDecision,mergeStateStatus,statusCheckRollup` for review state.
-    - Use GitHub review-thread tooling when available for unresolved inline comments.
-16. If checks fail, inspect logs, fix the cause, rerun local validation, commit, push, and watch checks again.
-17. If reviewers or stewards leave actionable comments, address them in code or explain why no code change is appropriate, then push and re-check.
-18. Repeat until required checks pass, review threads are resolved or answered, and the PR is not draft, blocked, or conflicted.
-19. Report the PR URL, final validation state, and any merge blockers that remain outside the agent's control.
-20. On a clean finish, close with the backlog stat line (see **Closing Stat Line**).
+Do not claim a new item while a current claimed PR still has failing checks, unresolved actionable feedback, or conflicts.
 
 ## Closing Stat Line
 
-When the item is delivered and the PR is merge-ready, end with a short backlog stat line — a quick reward for finishing one item and an invitation to take the next. Only show it on a clean finish; skip it if you released, dismissed, or stopped with merge blockers still outstanding.
-
-Gather the numbers cheaply — this is a closing flourish, not a second report:
-
-- `list_stewards` (pass `repository`) for the repository-wide queued/done counts and the active steward count. Reuse the backlog summaries it returns rather than re-listing every steward's items.
-- `manage_backlog_work` with `action: "peek"` and no `identifier` for the next eligible top item's objective and owning steward. Peek is read-only and does not claim anything.
-
-Keep it to one or two lines: the backlog state, the next item, and a single invitation to run the skill again. Do not expand it into a status report. Example:
+On a clean single-item finish (skip if you released, dismissed, or stopped with merge blockers), end with a short backlog stat line — a quick reward and an invitation to take the next. Gather numbers cheaply: `list_stewards` (pass `repository`) for queued/done counts, `manage_backlog_work` `action: "peek"` for the next top item. One or two lines, not a status report:
 
 ```text
 ✓ Backlog: 6 queued across 3 stewards · 13 done. Next up: "Cache verdict lookups in review-policy" (testing steward).
 Run /steward:work-backlog again to take it.
 ```
 
-If the queue is now empty, say so and stop — no invitation to extend:
+If the queue is empty: `✓ Backlog: 0 queued. The queue is clear — nothing left to claim.`
 
-```text
-✓ Backlog: 0 queued. The queue is clear — nothing left to claim.
-```
-
-## PR Monitoring Loop
-
-Use this loop after every push:
-
-```text
-while PR is not merge-ready:
-  inspect CI status and review/comment state
-  if CI failed:
-    read failing logs, fix, validate locally, commit, push
-  else if review comments are actionable:
-    address or answer them, validate if code changed, commit, push
-  else if branch is behind or conflicted:
-    update from main, resolve conflicts, validate, push
-  else if checks are pending:
-    wait and poll again
-  else:
-    mark the PR merge-ready in the final response
-```
-
-Do not claim a new top item while the current claimed PR still has failing checks, unresolved actionable review feedback, or merge conflicts.
+(In batch / routine mode the **Morning Report** replaces the stat line.)
 
 ## Failure Handling
 
-- No queued item: say there is no top backlog item to claim and stop.
-- Named steward not found: do not guess. List the available stewards with `list_stewards` and ask the user which one they meant.
-- Named steward has an empty queue: say the steward's queue is empty and stop. Do not fall back to the repository-wide top item unless the user asks.
-- Named item not found or ambiguous: list the matching queued items with `list_steward_backlog_items` and ask the user to confirm which item to claim. Do not claim a different item silently.
-- Named item is not eligible (already claimed, in progress, done, or dismissed): report its current state and stop; do not substitute another item without the user's say-so.
-- Claim rejected because another agent claimed it: call `manage_backlog_work` with `action: "peek"` once, then claim the new top item if it is still appropriate. When the user targeted a specific item or steward, do not silently claim a different item — report it and confirm with the user.
-- Setup cannot create the worktree: do not switch to a different branch name. Read the error, check for an existing branch/worktree for the registered branch, and either continue there or unclaim with an explanation.
-- Item is impossible, obsolete, or unsafe: do not open a placeholder PR. Use `manage_backlog_work` with `action: "dismiss"` only when the reason is specific and evidence-backed; otherwise use `action: "release"`.
+- No queued item: say there is no top item to claim and stop.
+- Named steward not found: do not guess — list available stewards with `list_stewards` and ask.
+- Named steward's queue empty: say so and stop; do not fall back to the repo-wide top item unless asked.
+- Named item not found / ambiguous: list matching queued items and ask; never claim a different item silently.
+- Named item not eligible (already claimed/in progress/done/dismissed): report its state and stop.
+- Claim lost to another agent: `peek` once, then claim the new top item if still appropriate — but if the user targeted a specific item/steward, report and confirm rather than silently substituting.
+- Worktree setup fails: do not switch branch names. Read the error, look for an existing branch/worktree for the registered branch, continue there or `release` with an explanation.
+- Item impossible/obsolete/superseded/unsafe: do not open a placeholder PR. `dismiss` with a specific, evidence-backed reason; otherwise `release`.
+- Batch run hits an item it cannot complete: `release` it with a note, record it under "Your call" in the report, and continue with remaining budget rather than aborting the whole run.
