@@ -5,7 +5,7 @@ description: Use when the user wants Claude Code to make progress on a Steward b
 
 # Work Backlog
 
-Make progress on a Steward backlog: tend the PRs already in flight, start new items, keep each linked PR moving toward merge-ready, and dismiss items whose work is already done. The skill is **stateless** — every run is configured entirely by its arguments, never by saved state, so different people can run it different ways at different times.
+Make progress on a Steward backlog: tend the PRs already in flight, start new items, keep each linked PR moving toward merge-ready, and reconcile items whose work is already done (resolving the ones a steward already covered, dismissing the ones that went stale). The skill is **stateless** — every run is configured entirely by its arguments, never by saved state, so different people can run it different ways at different times.
 
 ## Modes of Invocation
 
@@ -31,7 +31,12 @@ Every direct run resolves to these. The conversational session fills them by ask
 
 ## Conversational Session (no arguments)
 
-1. Show the current backlog up front so the conversation is grounded: call `list_stewards` (pass `repository`) for queued/in-flight/done counts per steward, and note any in-flight backlog PRs. Lead with this, not with questions.
+1. Show the current backlog up front so the conversation is grounded: call `list_stewards` (pass `repository`) and note any in-flight backlog PRs. Lead with this, not with questions. Present per-steward counts as **open** (queued + in progress) and **resolved**, and break resolved work down by the `outcome_counts` the response carries — never a bare "Done / Dismissed" split. Resolved items divide into:
+   - **Cleared** — `fixed` (code shipped), `verified` (the concern was valid but already covered — a steward win), and `finding` (an investigation recorded an answer). These are legitimate progress.
+   - **Set aside** — `obsolete` (superseded / no longer relevant) and `deferred` (valid, not now). Neutral pruning, not waste.
+   - **Miss** — `invalid` (the steward was wrong). This is the only count that signals wasted attention; surface it on its own rather than hiding it inside a "dismissed" total.
+
+   So show e.g. "Cleared 6 · Set aside 16 · 2 miss", not "8 done, 18 dismissed". Clearing an already-covered or obsolete item is the loop working, not effort wasted — the labels must say so.
 2. Ask what they want to accomplish, mapping their answer onto the run config: **scope** (whole repo, one steward, one item?), **how much** (how many items, or "just the top one"?), **autonomy** (open PRs and stop, or also merge what's green?). Keep it to the few questions that actually change the run; infer sane defaults for the rest and state them.
 3. Run the agreed work using the **Direct Run** sections below (single item or batch).
 4. **End by emitting the nightly routine command** — see **Emitting the Routine Command**. The point of the conversation is not just to do tonight's work; it is to hand the user the reproducible command so they can schedule it and stop typing it.
@@ -40,9 +45,12 @@ Every direct run resolves to these. The conversational session fills them by ask
 
 Backlog items go stale: the work gets done by other changes before the item is worked. Catching this is cheap here (you have the repo and the diffs) and expensive anywhere else, so it is a standing part of every run, not a flag.
 
-- **Before implementing any claimed item**, verify the work is not already done. Check recent merged PRs, `git log`, and the actual current code for the item's objective. If the objective is already satisfied, do **not** implement or open a PR — `dismiss` the item with `manage_backlog_work` and a concrete, evidence-backed note naming what already did the work (the commit/PR), and move on.
-- **When tending an in-flight PR** (see batch session) you find merge conflicts or staleness, and resolving them reveals the work was superseded by more recent changes, treat that as the same signal: dismiss the backlog item with evidence and surface the PR as one to **close, not merge** (do not close someone's PR autonomously — flag it in the report as a decision for the user).
-- Never dismiss on a fuzzy hunch. Dismissal requires a specific artifact (a merged PR, a commit, code that already implements the objective). When unsure, leave the item and note the uncertainty in the report.
+- **Before implementing any claimed item**, verify the work is not already done. Check recent merged PRs, `git log`, and the actual current code for the item's objective. If the objective is already satisfied, do **not** implement or open a PR — close it with `manage_backlog_work` and a concrete, evidence-backed note naming what already did the work (the commit/PR), then move on. Pick the terminal outcome that tells the truth, because the counts are read as a win/miss signal:
+  - The concern was **valid and is already covered** in the current code → `action: "resolve"` with `outcome: "verified"`. This is a steward **win** (Cleared), not a dismissal.
+  - The work was **superseded or is no longer relevant** → `action: "dismiss"` with `outcome: "obsolete"` (the default). Neutral pruning (Set aside).
+  - The concern was **wrong** — it never applied → `action: "dismiss"` with `outcome: "invalid"`. This is the only real **miss**; do not reach for it just because an item is being closed without code.
+- **When tending an in-flight PR** (see batch session) you find merge conflicts or staleness, and resolving them reveals the work was superseded by more recent changes, treat that as the same signal: close the backlog item (`obsolete` if superseded, `verified` if the concern was valid and now covered) with evidence, and surface the PR as one to **close, not merge** (do not close someone's PR autonomously — flag it in the report as a decision for the user).
+- Never close on a fuzzy hunch. It requires a specific artifact (a merged PR, a commit, code that already implements the objective). When unsure, leave the item and note the uncertainty in the report.
 
 ## Direct Run — Single Item (a specific item or a steward's top item)
 
@@ -88,7 +96,7 @@ Claim one item at a time; never hold multiple active claims. Respect `max-items`
 
 The deliverable of a batch / routine run — what the user wakes up to. Keep it scannable, three sections:
 
-1. **Done** — items completed this run: each with its title, the PR (number + link), and CI state. Items dismissed as already-done, with the artifact that superseded them.
+1. **Done** — items completed this run: each with its title, the PR (number + link), and CI state. Items reconciled as already-done — name the outcome (cleared / set aside, e.g. `verified` or `obsolete`) and the artifact that superseded them; do not file a valid already-covered close under "dismissed".
 2. **In flight** — backlog-driven PRs still open: each with number + link and current state (green / CI red / conflicted / awaiting review).
 3. **Your call** — decisions only the user can make: PRs to merge, PRs flagged redundant to close (with the superseding PR), blocked items needing a human, anything the run deliberately left.
 
@@ -117,7 +125,8 @@ Use `manage_backlog_work` as the execution lifecycle tool:
 - `action: "peek"` — inspect top eligible work without changing state.
 - `action: "claim"` — claim eligible work and register the push branch. No `identifier` claims the repo-wide top item; an `identifier` (item id, group id, or reference) claims that exact item.
 - `action: "release"` — unclaim when pausing or abandoning before completion.
-- `action: "dismiss"` — dismiss obsolete, impossible, superseded, or unsafe work with an evidence-backed reason. Item dismiss returns `result: "dismissed"`, `target_type: "item"`, `backlog_item_id`, `steward_id`; group dismiss returns `result: "dissolved"`, `target_type: "group"`, `group_id`.
+- `action: "resolve"` — close an item whose deliverable is a recorded result rather than a pull request, with `outcome: "verified"` (the concern was valid and the code **already implements it** — no new code shipped; a steward win) or `outcome: "finding"` (an investigation **completed and recorded a result** — a decision/audit note). Reach for `resolve` whenever already-done work was legitimate: a `note`-shaped item that turns out already-covered resolves `verified` — it must never be dismissed `obsolete`, which would misreport a win as pruning. Check the item's intended deliverable (`pull_request` vs `note`) when deciding: a `pull_request` item superseded by another PR is a `dismiss`/`obsolete`, while a `note` item already satisfied is a `resolve`/`verified`.
+- `action: "dismiss"` — close obsolete, impossible, superseded, or unsafe work with an evidence-backed reason and an `outcome`: `"obsolete"` (superseded / no longer relevant — the default), `"deferred"` (valid but postponed; requires `follow_up_item_id`), or `"invalid"` (the concern was wrong — a steward miss). Default to `obsolete` for already-done/superseded work; reserve `invalid` for concerns that genuinely never applied. Item dismiss returns `result: "dismissed"`, `target_type: "item"`, `backlog_item_id`, `steward_id`; group dismiss returns `result: "dissolved"`, `target_type: "group"`, `group_id`.
 
 `list_stewards` and `list_steward_backlog_items` are reads — use them to resolve a named steward or find an item id/reference. Use `update_steward_backlog_item` / `create_steward_backlog_item` only for maintenance outside the normal lifecycle. The MCP surface does not create git worktrees or open PRs; use git and `gh` for those.
 
@@ -150,10 +159,10 @@ Do not claim a new item while a current claimed PR still has failing checks, unr
 
 ## Closing Stat Line
 
-On a clean single-item finish (skip if you released, dismissed, or stopped with merge blockers), end with a short backlog stat line — a quick reward and an invitation to take the next. Gather numbers cheaply: `list_stewards` (pass `repository`) for queued/done counts, `manage_backlog_work` `action: "peek"` for the next top item. One or two lines, not a status report:
+On a clean single-item finish (skip if you released, dismissed, or stopped with merge blockers), end with a short backlog stat line — a quick reward and an invitation to take the next. Gather numbers cheaply: `list_stewards` (pass `repository`) for queued + cleared counts, `manage_backlog_work` `action: "peek"` for the next top item. One or two lines, not a status report:
 
 ```text
-✓ Backlog: 6 queued across 3 stewards · 13 done. Next up: "Cache verdict lookups in review-policy" (testing steward).
+✓ Backlog: 6 queued across 3 stewards · 13 cleared. Next up: "Cache verdict lookups in review-policy" (testing steward).
 Run /steward:work-backlog again to take it.
 ```
 

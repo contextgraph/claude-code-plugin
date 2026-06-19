@@ -5,13 +5,13 @@
     "email": "ben.nevile@gmail.com"
   },
   "description": "Repository-native stewards and MCP tools for Claude Code",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "plugins": [
     {
       "name": "steward",
       "source": "./plugins/steward",
       "description": "Repository-native steward definition and activation for Claude Code.",
-      "version": "0.10.0",
+      "version": "0.10.1",
       "author": {
         "name": "steward",
         "email": "ben.nevile@gmail.com"

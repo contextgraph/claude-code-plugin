@@ -85,7 +85,7 @@ initialization artifacts.
 
 - **Persistent Action Management**: Create, update, and track actions across sessions
 - **Repository-Native Steward Definition**: Use `/steward:define-steward` to inspect every repository the steward will cover — including repos beyond the current checkout when the steward is scoped to several repos or the whole workspace — create a rubric-centric steward with `configure_steward`, reconcile inventory across all covered repos, and initialize the steward from Claude Code
-- **Backlog Execution Loop**: Use `/steward:work-backlog` to make progress on a Steward backlog. With no argument it runs a conversational session (shows the backlog, asks what you want, does the work, and hands back a command to schedule nightly); with an argument it runs directly — a specific item, a steward's top item, or a bounded batch (`--max-items N --autonomy pr`) suited to an unattended nightly Claude Code Routine. A run tends in-flight backlog PRs (resolving conflicts, fixing CI, dismissing already-done work), claims and implements queued items through linked PRs, and reports what it did plus the decisions left for you
+- **Backlog Execution Loop**: Use `/steward:work-backlog` to make progress on a Steward backlog. With no argument it runs a conversational session (shows the backlog, asks what you want, does the work, and hands back a command to schedule nightly); with an argument it runs directly — a specific item, a steward's top item, or a bounded batch (`--max-items N --autonomy pr`) suited to an unattended nightly Claude Code Routine. A run tends in-flight backlog PRs (resolving conflicts, fixing CI, reconciling already-done work), claims and implements queued items through linked PRs, and reports what it did plus the decisions left for you
 - **Plan Review With Stewards**: Use `/steward:plan-review` to consult the repository's stewards on a proposed plan before implementation, surface their attributed concerns, and propose a new steward when the plan introduces an unowned domain such as a new integration
 - **Hierarchical Planning**: Organize work in parent-child relationships
 - **Dependency Tracking**: Manage action dependencies and execution order
@@ -205,7 +205,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.10.0
+Current version: 0.10.1
 
 ## License
 
