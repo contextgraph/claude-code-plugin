@@ -88,13 +88,13 @@ A bounded session that makes broad progress, in two phases, then reports. This i
 
 **Phase 2 — Start new items.** With remaining budget (`max-items` minus items already advanced in phase 1), claim and work queued items via the **Single Item** workflow above (reconcile → consult → implement → PR), highest priority first, within scope. In batch mode do **not** babysit each PR to green — open the linked PR, capture its CI/review state, and move to the next item. Stop when `max-items` is reached or the queue (within scope) is empty.
 
-**Phase 3 — Report.** Emit the **Morning Report**.
+**Phase 3 — Report.** Emit the **Backlog Session Report**.
 
 Claim one item at a time; never hold multiple active claims. Respect `max-items` as a hard stop so an unattended run is bounded.
 
-## Morning Report
+## Backlog Session Report
 
-The deliverable of a batch / routine run — what the user wakes up to. Keep it scannable, three sections:
+The deliverable of a batch / routine run — what the user returns to. Keep it scannable, three sections:
 
 1. **Done** — items completed this run: each with its title, the PR (number + link), and CI state. Items reconciled as already-done — name the outcome (cleared / set aside, e.g. `verified` or `obsolete`) and the artifact that superseded them; do not file a valid already-covered close under "dismissed".
 2. **In flight** — backlog-driven PRs still open: each with number + link and current state (green / CI red / conflicted / awaiting review).
@@ -168,7 +168,7 @@ Run /steward:work-backlog again to take it.
 
 If the queue is empty: `✓ Backlog: 0 queued. The queue is clear — nothing left to claim.`
 
-(In batch / routine mode the **Morning Report** replaces the stat line.)
+(In batch / routine mode the **Backlog Session Report** replaces the stat line.)
 
 ## Failure Handling
 
