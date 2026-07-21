@@ -81,17 +81,22 @@ If update does not pick up a new skill, reinstall:
 
 ### Keeping skills up to date
 
-`npx skills` records what it installed in a `skills-lock.json`, so it can pull
-the latest published versions any time:
+`npx skills` records what it installed in a lock file — `skills-lock.json` in
+the project root for a local install, or `~/.agents/.skill-lock.json` (honoring
+`$XDG_STATE_HOME`) for a global (`-g`) install — so it can pull the latest
+published versions any time:
 
 ```bash
-npx skills update        # refresh this project's skills
-npx skills update -g     # refresh globally installed skills
+npx skills update        # refresh this project's skills (skills-lock.json)
+npx skills update -g     # refresh global skills (~/.agents/.skill-lock.json)
 ```
 
 To keep them current **automatically**, run the update from a Claude Code
-[SessionStart hook](https://code.claude.com/docs/en/hooks) so every session
-starts on the latest skills. Add this to `.claude/settings.json`:
+[SessionStart hook](https://code.claude.com/docs/en/hooks). Pin the CLI to a
+release you have reviewed rather than resolving `@latest` on every start: the
+pinned tool still fetches the newest *skills* from the source repo, so you stay
+current without running an unreviewed CLI at each session. Add this to
+`.claude/settings.json`:
 
 ```json
 {
@@ -99,7 +104,7 @@ starts on the latest skills. Add this to `.claude/settings.json`:
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "npx -y skills@latest update --yes" }
+          { "type": "command", "command": "npx -y skills@1.5.19 update --yes" }
         ]
       }
     ]
@@ -107,7 +112,8 @@ starts on the latest skills. Add this to `.claude/settings.json`:
 }
 ```
 
-Plugin installs update through `/plugin update steward` instead.
+Bump the pinned `skills@1.5.19` when you review a newer release. Plugin installs
+update through `/plugin update steward` instead.
 
 ### Verify installation
 
@@ -120,18 +126,19 @@ Check that the Steward MCP server is connected and authenticated:
 You should see `steward` listed as a configured MCP server. Complete the
 browser authentication handoff if Claude Code prompts for it.
 
-Check that the skills are available. Use the bare `/define-steward` form for a
-`npx skills` install, or the namespaced `/steward:define-steward` form for a
-plugin install:
+Check that the skills are available. The invocation form depends on how you
+installed them:
 
-```text
-/define-steward
-/work-backlog
-```
+- **`npx skills` install** — bare names: `/define-steward`, `/plan-review`,
+  `/work-backlog`
+- **`/plugin` install** — plugin-namespaced: `/steward:define-steward`,
+  `/steward:plan-review`, `/steward:work-backlog`
 
 To smoke-test a skill and the MCP tools together, confirm `/mcp` shows the
 `steward` server is authenticated, then open Claude Code in the repository you
-want the steward to watch and run the define-steward skill with this prompt:
+want the steward to watch and invoke the define-steward skill —
+`/define-steward` (or `/steward:define-steward` for a plugin install) — with
+this prompt:
 
 ```text
 Run the steward onboarding preflight for this repository, then inspect this
@@ -139,7 +146,8 @@ repository and call configure_steward with action="validate" for a draft
 steward. Do not create or update anything yet.
 ```
 
-To test the full steward creation path, run the define-steward skill with:
+To test the full steward creation path, invoke the define-steward skill (the
+same `/define-steward` or `/steward:define-steward` form as above) with:
 
 ```text
 Inspect this repository, draft a narrow steward, preview it, and ask before

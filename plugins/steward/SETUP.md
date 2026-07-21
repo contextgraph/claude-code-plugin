@@ -25,6 +25,10 @@ repository they will watch.
 > `/plan-review`, `/work-backlog`); the second connects the MCP server the
 > plugin would otherwise configure for you. See the repository README's
 > Installation section for details, global installs, and auto-updates.
+>
+> The verification steps below use the plugin's `/steward:` prefix. For an
+> `npx skills` install, drop the prefix — `/define-steward`, `/plan-review`,
+> `/work-backlog`.
 
 ## Verify Installation
 
