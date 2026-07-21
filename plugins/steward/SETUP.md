@@ -13,6 +13,19 @@ The plugin also includes the
 `/steward:define-steward` skill for creating stewards from inside the
 repository they will watch.
 
+> **Prefer a single command?** You can install just the skills with Vercel's
+> open `skills` CLI instead of the plugin:
+>
+> ```bash
+> npx skills add contextgraph/claude-code-plugin
+> claude mcp add --transport http steward https://mcp.steward.foo
+> ```
+>
+> The first command installs the skills (as `/define-steward`,
+> `/plan-review`, `/work-backlog`); the second connects the MCP server the
+> plugin would otherwise configure for you. See the repository README's
+> Installation section for details, global installs, and auto-updates.
+
 ## Verify Installation
 
 Check that the MCP server is connected and authenticated:
@@ -62,6 +75,9 @@ If update does not pick up the new skill, uninstall and install again:
 /plugin uninstall steward
 /plugin install steward
 ```
+
+If you installed the skills with `npx skills` instead of the plugin, update
+them with `npx skills update` (add `-g` for a global install).
 
 ## Getting Started
 
