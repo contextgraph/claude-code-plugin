@@ -109,7 +109,6 @@ Once installed, Claude Code can use these tools:
 - `parse_plan` - Convert unstructured text into structured actions
 - `fetch_tree` - View hierarchical action trees
 - `prepare_steward_onboarding` - Check MCP auth, workspace resolution, and GitHub App repository access before defining a steward
-- `integration` - Inspect workspace integration status and metric measurement capabilities
 - `configure_steward` - Validate, preview, create, or update rubric-centric stewards
 - `manage_backlog_work` - Consolidated Steward backlog execution lifecycle tool: peek, claim, release, or dismiss item/group work
 - `list_steward_backlog_items` - List backlog items for a steward with optional state filtering
@@ -205,7 +204,7 @@ Visit [steward.foo](https://steward.foo) to view and manage your actions in a vi
 
 ## Version
 
-Current version: 0.10.1
+Current version: 0.11.0
 
 ## License
 
