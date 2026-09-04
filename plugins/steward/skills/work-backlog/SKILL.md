@@ -12,7 +12,7 @@ Make progress on a Steward backlog: tend the PRs already in flight, start new it
 Route on whether the user passed an argument:
 
 - **No argument → Conversational session.** Show the current backlog, ask what they want to accomplish, do the agreed work, and end by emitting the exact command to schedule as a nightly routine. This is the guided, discover-by-talking entry point (the same shape as `/steward:define-steward`).
-- **Argument(s) given → Direct run, no conversation.** Parse the arguments into a run config and execute. This is what an unattended nightly Claude Code Routine calls, and what the heartbeat email's one-paste command uses. Three argument shapes:
+- **Argument(s) given → Direct run, no conversation.** Parse the arguments into a run config and execute. This is what an unattended nightly Claude Code Routine calls. Three argument shapes:
   - **A specific item** — an id, group id, or human-readable reference. Work that one item.
   - **A steward** — a steward name or id. Work that steward's top eligible item.
   - **Batch params** — a max item count and/or scope and/or autonomy (e.g. `--max-items 3 --steward accessibility --autonomy pr`, or natural language like "work 3 accessibility items, open PRs, don't merge"). Run a batch session.
@@ -54,7 +54,7 @@ Backlog items go stale: the work gets done by other changes before the item is w
 
 ## Direct Run — Single Item (a specific item or a steward's top item)
 
-This is the original single-item behavior and the path the heartbeat email's one-paste command uses.
+This is the original single-item behavior.
 
 ### Selecting the item
 - **Specific item.** If you have an id or unambiguous reference, use it directly. For a fuzzy reference, list candidates with `list_steward_backlog_items` (filter `states: ["queued"]`) and confirm before claiming; if it matches more than one, show the candidates and ask.
