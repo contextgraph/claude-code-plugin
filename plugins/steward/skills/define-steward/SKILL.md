@@ -28,7 +28,7 @@ After setup is ready, determine whether this is the user's first steward in this
 When this is the first steward in this repo, the orientation pause below is a required step. Do not propose, inspect, or suggest a zone — and do not ask the opening question — until you have delivered the 3-5 sentence explanation and the user has acknowledged or moved past it. The orientation must cover all three of:
 
 - **Reach**: what a steward owns, and why a steward is useful because it is narrow. Tie this to Ryan's framing — "what is the reach of a steward" — and make it explicit that a steward's reach is one zone of concern, not a department or framework heading.
-- **Rubric**: the 4-7 judgment dimensions that make this a good — "optimal" — steward rather than a generic label. The rubric is the steward's point of view, not decorative metadata, and it is what shows up in PR reviews, heartbeats, and consult responses.
+- **Rubric**: the 4-7 judgment dimensions that make this a good — "optimal" — steward rather than a generic label. The rubric is the steward's point of view, not decorative metadata, and it is what shows up in PR reviews and consult responses.
 - **Vigilance**: what the steward will actually do after creation — review every relevant PR or commit through this rubric, maintain its inventory, and surface concerns when the zone is at risk.
 
 Keep it to 3-5 sentences total, written for this user and this repository (not boilerplate). A concrete opener you can adapt: "A steward is a focused AI agent that owns one narrow domain of your repository — it reviews PRs through its rubric, maintains an inventory of its zone, and gives advice when you work there." Mention that the coding agent will inspect the repo and configure inventory, notes, and first actions with the user rather than making them fill out a form. Then — and only then — ask the opening question.
@@ -87,7 +87,7 @@ Each prototype still has to pass the narrowness test for this specific repositor
 8. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and the short operating model described below.
 9. Ask for approval in natural language before writing.
 10. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward. After a successful create, show the direct steward page link using the resolved workspace slug and returned steward id.
-11. If the tool returns `activation.next_action: "reconcile_inventory"`, narrate one short sentence to the user before scanning the repo — explain what the inventory is for this steward and that it is the cached memory the steward reads on every review and consult (and refreshes at heartbeat). Then inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
+11. If the tool returns `activation.next_action: "reconcile_inventory"`, narrate one short sentence to the user before scanning the repo — explain what the inventory is for this steward and that it is the cached memory the steward reads on every review and consult. Then inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
 12. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory.
 13. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
 14. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
@@ -128,7 +128,7 @@ The test for any candidate steward is narrowness, not where the idea came from. 
 
 ## Integrations
 
-Connected integrations (PostHog, Axiom, and Langfuse) give the steward read-only evidence tools it can use during heartbeats, inventory reconciliation, and chat. When a covered repository plainly uses one of these providers and the workspace has not connected it, mention the settings link once and move on: `https://www.steward.foo/<workspace-slug>/settings/integrations/<provider>`.
+Connected integrations (PostHog, Axiom, and Langfuse) give the steward read-only evidence tools it can use during inventory reconciliation and chat. When a covered repository plainly uses one of these providers and the workspace has not connected it, mention the settings link once and move on: `https://www.steward.foo/<workspace-slug>/settings/integrations/<provider>`.
 
 No status lookup, no pitch.
 
@@ -190,7 +190,7 @@ If the user wants to update CLAUDE.md or skills, inspect the repository instruct
 
 ## Rubric Architecture
 
-Each steward is built around a rubric. The rubric is the steward's point of view; it shows up in PR reviews, heartbeats, and consult responses. Treat the rubric as the steward.
+Each steward is built around a rubric. The rubric is the steward's point of view; it shows up in PR reviews and consult responses. Treat the rubric as the steward.
 
 Pick 4 to 7 dimensions. Each dimension is one row in `rubric_dimensions: [{ name, description }]`.
 
@@ -212,7 +212,7 @@ Avoid:
 
 These slots ground the steward in real artifacts. The create step seeds the durable artifact shells; after creation, the coding agent reconciles the actual inventory contents and writes the first initialization note and backlog items through activation actions. Update mode cannot edit inventory or evidence.
 
-Inventory is optional and at most one item. It is the steward's compact, complete, cached memory of its domain — and it is injected into **every review and consult**, not just re-read at heartbeat. That is what lets the steward recognize what it already knows (this surface is covered, this token is audited, this event already exists) instead of re-deriving it from the diff each time. Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
+Inventory is optional and at most one item. It is the steward's compact, complete, cached memory of its domain — and it is injected into **every review and consult**. That is what lets the steward recognize what it already knows (this surface is covered, this token is audited, this event already exists) instead of re-deriving it from the diff each time. Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
 
 Because the whole inventory ships into every review, two properties matter equally: it must be **complete** (a partial catalog can't catch a naming collision or confirm coverage) and each row must be **lean** (a per-row size limit will be enforced at write time in a later change). Completeness is bounded by mission narrowness: if a complete inventory of lean rows would be too large to read on every review, the zone is too broad — narrow the mission, don't summarize the inventory.
 
@@ -225,7 +225,7 @@ Because the whole inventory ships into every review, two properties matter equal
 
 - **Change history** — "PR #696 then #698 did X/Y/Z", resolved-concern logs, `merged_at`. That belongs in notes.
 - **Open work items** — "should add a test for X", undocumented-thing trackers. That belongs in the backlog.
-- **Provider telemetry** — event volumes, user counts, last-seen timestamps. That is derived at heartbeat from the provider, not frozen into a row.
+- **Provider telemetry** — event volumes, user counts, last-seen timestamps. That is read live from the provider, not frozen into a row.
 
 Keep the current answer; drop the journey and the open work. A 4 KB row stuffed with PR-by-PR narrative is the signal that history and work-tracking have leaked into the inventory.
 
@@ -265,7 +265,7 @@ Use stable keys that will still make sense after files move. Prefer keys such as
 
 When the steward covers more than one repository, reconcile inventory across **all** of them, not just the current checkout (see _Covered Repositories_). Prefix every entry key with the repository slug so a row read on every review is never mistaken for the wrong repository's: `<owner>/<repo>:<stable-key>` — for example `contextgraph/actions:route:login` and `contextgraph/web:route:login` are two distinct rows. Apply the prefix consistently to **every** entry once the steward covers more than one repo, including the current checkout, so keys parse and sort uniformly; a single-repo steward does not need the prefix. Keep the human-readable `name` clear about the repo too when the same path or name exists in more than one repo.
 
-Keep each row lean enough to read on every review: the current contract (catalog) or current status and why (coverage), plus paths and dimension anchors. Leave change history for notes, open work for the backlog, and provider telemetry out of the row entirely — it is derived at heartbeat, not frozen into inventory. A row that needs a paragraph of PR-by-PR narrative is carrying material that belongs elsewhere — the write-time per-row size limit will reject it, and the fix is to move that material out, not to split the fact across keys.
+Keep each row lean enough to read on every review: the current contract (catalog) or current status and why (coverage), plus paths and dimension anchors. Leave change history for notes, open work for the backlog, and provider telemetry out of the row entirely — it is read live from the provider, not frozen into inventory. A row that needs a paragraph of PR-by-PR narrative is carrying material that belongs elsewhere — the write-time per-row size limit will reject it, and the fix is to move that material out, not to split the fact across keys.
 
 Before drafting or previewing initialization artifacts, show a steward readiness review and ask whether it looks right.
 
