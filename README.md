@@ -10,32 +10,112 @@ The plugin connects Claude Code to the Steward MCP server so steward setup happe
 
 ## Installation
 
-Via the `/plugin` menu in Claude Code:
-1. Select "Manage marketplaces"
-2. Add marketplace: `contextgraph/claude-code-plugin`
-3. Select "Browse and install plugins"
-4. Install `steward`
+Steward has two parts: the **skills** (the `define-steward`, `plan-review`, and
+`work-backlog` workflows) and the **Steward MCP server** those skills call.
+There are two ways to install — pick one.
 
-Then reload plugins:
+### Quick install with `npx skills` (recommended)
 
-```text
-/reload-plugins
+Vercel's open [`skills`](https://github.com/vercel-labs/skills) CLI installs the
+steward skills into Claude Code (and 25+ other coding agents) with a single
+command:
+
+```bash
+npx skills add contextgraph/claude-code-plugin
 ```
 
-To update an existing install:
+This installs the `define-steward`, `plan-review`, and `work-backlog` skills
+into `.agents/skills/` and symlinks them into `.claude/skills/` so Claude Code
+picks them up. Add `-g` to install once for every project instead of only the
+current one:
+
+```bash
+npx skills add contextgraph/claude-code-plugin -g
+```
+
+The skills call the Steward MCP server, so connect it as well. Installing skill
+files is all the `skills` CLI does — it does not configure MCP servers — so add
+the server yourself (one time):
+
+```bash
+claude mcp add --transport http steward https://mcp.steward.foo
+```
+
+Add `--scope user` to reach every project, or `--scope project` to write a
+shareable `.mcp.json` into the repository. Then run `/mcp`, confirm `steward` is
+listed, and complete the browser sign-in when Claude Code prompts.
+
+Installed this way, invoke the skills by their bare name — `/define-steward`,
+`/plan-review`, `/work-backlog` — and they also activate automatically when a
+request matches their description.
+
+### All-in-one install with the `/plugin` marketplace
+
+The Claude Code plugin bundles the skills **and** the MCP server, so a single
+install wires up both:
+
+1. Open the `/plugin` menu and choose "Manage marketplaces"
+2. Add marketplace: `contextgraph/claude-code-plugin`
+3. Choose "Browse and install plugins" and install `steward`
+4. Reload plugins:
+
+   ```text
+   /reload-plugins
+   ```
+
+Installed this way, the skills are namespaced by the plugin —
+`/steward:define-steward`, `/steward:plan-review`, `/steward:work-backlog`.
+
+To update an existing plugin install:
 
 ```text
 /plugin update steward
 ```
 
-If update does not pick up the new skill, reinstall:
+If update does not pick up a new skill, reinstall:
 
 ```text
 /plugin uninstall steward
 /plugin install steward
 ```
 
-### Verify Installation
+### Keeping skills up to date
+
+`npx skills` records what it installed in a lock file — `skills-lock.json` in
+the project root for a local install, or `~/.agents/.skill-lock.json` (honoring
+`$XDG_STATE_HOME`) for a global (`-g`) install — so it can pull the latest
+published versions any time:
+
+```bash
+npx skills update        # refresh this project's skills (skills-lock.json)
+npx skills update -g     # refresh global skills (~/.agents/.skill-lock.json)
+```
+
+To keep them current **automatically**, run the update from a Claude Code
+[SessionStart hook](https://code.claude.com/docs/en/hooks). Pin the CLI to a
+release you have reviewed rather than resolving `@latest` on every start: the
+pinned tool still fetches the newest *skills* from the source repo, so you stay
+current without running an unreviewed CLI at each session. Add this to
+`.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "npx -y skills@1.5.19 update --yes" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Bump the pinned `skills@1.5.19` when you review a newer release. Plugin installs
+update through `/plugin update steward` instead.
+
+### Verify installation
 
 Check that the Steward MCP server is connected and authenticated:
 
@@ -46,35 +126,30 @@ Check that the Steward MCP server is connected and authenticated:
 You should see `steward` listed as a configured MCP server. Complete the
 browser authentication handoff if Claude Code prompts for it.
 
-Check that the steward definition skill is installed:
+Check that the skills are available. The invocation form depends on how you
+installed them:
 
-```text
-/steward:define-steward
-```
+- **`npx skills` install** — bare names: `/define-steward`, `/plan-review`,
+  `/work-backlog`
+- **`/plugin` install** — plugin-namespaced: `/steward:define-steward`,
+  `/steward:plan-review`, `/steward:work-backlog`
 
-Check that the backlog execution skill is installed:
-
-```text
-/steward:work-backlog
-```
-
-To smoke-test the skill and MCP tool together, first confirm `/mcp` shows the
+To smoke-test a skill and the MCP tools together, confirm `/mcp` shows the
 `steward` server is authenticated, then open Claude Code in the repository you
-want the steward to watch and run:
+want the steward to watch and invoke the define-steward skill —
+`/define-steward` (or `/steward:define-steward` for a plugin install) — with
+this prompt:
 
 ```text
-/steward:define-steward
-
 Run the steward onboarding preflight for this repository, then inspect this
 repository and call configure_steward with action="validate" for a draft
 steward. Do not create or update anything yet.
 ```
 
-To test the full steward creation path, use:
+To test the full steward creation path, invoke the define-steward skill (the
+same `/define-steward` or `/steward:define-steward` form as above) with:
 
 ```text
-/steward:define-steward
-
 Inspect this repository, draft a narrow steward, preview it, and ask before
 creating it. If I approve creation, continue through inventory reconciliation
 and initialization preview before asking for final approval to save
@@ -117,7 +192,9 @@ Once installed, Claude Code can use these tools:
 
 ## Skills Available
 
-Plugin skills are namespaced by Claude Code as `/steward:<skill-name>`.
+Installed via the plugin, skills are namespaced by Claude Code as
+`/steward:<skill-name>`. Installed via `npx skills add`, the same skills are
+available under their bare name, `/<skill-name>`.
 
 - `/steward:define-steward` - Inspect every repository the steward will cover (not just the current checkout — a steward can be scoped to several repos, or to the whole workspace), draft a narrow steward spec, validate and preview it with `configure_steward`, create or update it after user approval, then reconcile inventory and initialize the steward from the coding agent. For repos beyond the current checkout the skill resolves a local checkout, offers a read-only clone, or asks where it lives before grounding anything.
 - `/steward:work-backlog` - Use the Steward MCP server to claim a backlog item — the repository-wide top item by default, a specific item you name (by id or reference), or the top item for a named steward — set up the registered branch/worktree, implement the work, open a PR linked by that branch, and continue through checks and review comments until the PR is merge-ready.
