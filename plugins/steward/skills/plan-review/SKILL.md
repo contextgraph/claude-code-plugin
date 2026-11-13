@@ -39,15 +39,15 @@ A plan review is one of the best moments to notice missing stewardship. If the p
 
 Strong signals that a new steward would help:
 
-- The plan adds a **new external integration** (a vendor SDK, a webhook surface, a third-party API). Integrations rot quietly: schemas drift, auth modes change, rate limits move. A dedicated steward keeps an expert eye on it, watches PRs that touch it, and owns the inventory of emit/consume sites.
+- The plan adds a **new external integration** (a vendor SDK, a webhook surface, a third-party API). Integrations rot quietly: schemas drift, auth modes change, rate limits move. A dedicated steward keeps an expert eye on it and watches PRs that touch it.
 - The plan introduces a **new product surface** with its own contract (a public API, a new data schema, a new event taxonomy, a new permission model).
 - The plan touches a **recurring concern** that has come up before but has no owner (migration safety, background jobs, secret handling, cron registry).
 - The plan implies an **ongoing watch** rather than a one-time change - something that will need attention every time the area is modified.
 
 How to propose, without derailing the plan review:
 
-1. After delivering the steward feedback, say something like: "This plan adds <Stripe webhooks / a new analytics event family / a Resend integration / ...>. There is no steward today for <that domain>. Want me to define one with `/steward:define-steward` after we land this? A steward there would review every PR that touches it, maintain the inventory of <emit sites / endpoints / handlers>, and be available for `consult` next time you plan work in this area."
-2. Name one concrete rubric dimension or inventory anchor the steward would own, so the proposal is not generic. Use the actual repository evidence the consult surfaced.
+1. After delivering the steward feedback, say something like: "This plan adds <Stripe webhooks / a new analytics event family / a Resend integration / ...>. There is no steward today for <that domain>. Want me to define one with `/steward:define-steward` after we land this? A steward there would review every PR that touches it and be available for `consult` next time you plan work in this area."
+2. Name one concrete rubric dimension or evidence anchor the steward would own, so the proposal is not generic. Use the actual repository evidence the consult surfaced.
 3. Offer two paths: define the steward now (kick off `/steward:define-steward`) or capture it as a follow-up. Default to "after we land this" unless the user wants it now.
 
 Do not propose a new steward when:

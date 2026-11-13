@@ -1,6 +1,6 @@
 ---
 name: define-steward
-description: Use when defining, previewing, creating, activating, or updating a steward for a repository through the Steward MCP server. Inspect the codebase, draft a narrow rubric-centric steward spec, validate and preview it with configure_steward, create it only after user approval, then reconcile inventory and initialization artifacts from the coding agent.
+description: Use when defining, previewing, creating, activating, or updating a steward for a repository through the Steward MCP server. Inspect the codebase, draft a narrow rubric-centric steward spec, validate and preview it with configure_steward, create it only after user approval, then save its initialization report from the coding agent.
 ---
 
 # Define Steward
@@ -9,7 +9,7 @@ Use this skill when the user wants a new steward or wants to revise an existing 
 
 The Steward MCP server must be connected. If `prepare_steward_onboarding` or `configure_steward` is not available, ask the user to run `/mcp`, confirm the `steward` server is connected, and authenticate if Claude Code requests it.
 
-A steward is an AI agent with one zone of concern. Every other artifact - its mission, review lens, backlog, notes, and first actions - starts from a small structured steward spec: an ownership zone, a rubric of 4-7 dimensions, and a thin layer of inventory and evidence anchors. The `configure_steward` MCP tool is the only path that writes a steward, and the coding agent owns the post-create activation work.
+A steward is an AI agent with one zone of concern. Every other artifact - its mission, review lens, and notes - starts from a small structured steward spec: an ownership zone, a rubric of 4-7 dimensions, and a few evidence anchors. The `configure_steward` MCP tool is the only path that writes a steward, and the coding agent owns the post-create activation work.
 
 ## Start Here
 
@@ -29,9 +29,9 @@ When this is the first steward in this repo, the orientation pause below is a re
 
 - **Reach**: what a steward owns, and why a steward is useful because it is narrow. Tie this to Ryan's framing — "what is the reach of a steward" — and make it explicit that a steward's reach is one zone of concern, not a department or framework heading.
 - **Rubric**: the 4-7 judgment dimensions that make this a good — "optimal" — steward rather than a generic label. The rubric is the steward's point of view, not decorative metadata, and it is what shows up in PR reviews and consult responses.
-- **Vigilance**: what the steward will actually do after creation — review every relevant PR or commit through this rubric, maintain its inventory, and surface concerns when the zone is at risk.
+- **Vigilance**: what the steward will actually do after creation — review every relevant PR or commit through this rubric and surface concerns when the zone is at risk.
 
-Keep it to 3-5 sentences total, written for this user and this repository (not boilerplate). A concrete opener you can adapt: "A steward is a focused AI agent that owns one narrow domain of your repository — it reviews PRs through its rubric, maintains an inventory of its zone, and gives advice when you work there." Mention that the coding agent will inspect the repo and configure inventory, notes, and first actions with the user rather than making them fill out a form. Then — and only then — ask the opening question.
+Keep it to 3-5 sentences total, written for this user and this repository (not boilerplate). A concrete opener you can adapt: "A steward is a focused AI agent that owns one narrow domain of your repository — it reviews PRs through its rubric and gives advice when you work there." Mention that the coding agent will inspect the repo and write the steward's initialization note with the user rather than making them fill out a form. Then — and only then — ask the opening question.
 
 When this is not the first steward in the repo, skip the orientation and go directly to the opening question; existing stewards in the same repo mean the user already understands the model.
 
@@ -55,7 +55,7 @@ Four options is the hard maximum for any choice menu. Never present five or more
 
 ## Battle-Tested Steward Prototypes
 
-Option B starts from a prototype: a narrow steward lens that has proven useful across many codebases. Prototypes are not canned stewards and not templates to paste. They are starting lenses — the narrow-decomposition work already done — that you still ground and specialize against this repository. A prototype tells you where to look; the rubric, inventory, and evidence still come from this repo's real artifacts.
+Option B starts from a prototype: a narrow steward lens that has proven useful across many codebases. Prototypes are not canned stewards and not templates to paste. They are starting lenses — the narrow-decomposition work already done — that you still ground and specialize against this repository. A prototype tells you where to look; the rubric and evidence still come from this repo's real artifacts.
 
 When the user chooses B, give a short orientation (what a prototype is, and that you will fit one to their repo), inspect the repository, then surface the three or four prototypes that best fit, each with one-line evidence from this codebase. Do not list all of them; show the ones that fit. Once the user picks one, the workflow is identical to every other mode.
 
@@ -84,23 +84,21 @@ Each prototype still has to pass the narrowness test for this specific repositor
 5. Pick or refine one narrow ownership zone. Avoid broad stewards such as "Frontend", "Quality", or "Architecture"; if the user wants one of those, decompose it into a narrow lens that passes the narrowness test.
 6. Draft a spec.
 7. Call `configure_steward` with `action: "validate"`. Fix every blocking error.
-8. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, inventory anchors, and the short operating model described below.
+8. Call `configure_steward` with `action: "preview"`. Show the user the rendered mission, rubric, and the short operating model described below.
 9. Ask for approval in natural language before writing.
 10. Call `configure_steward` with `action: "apply"` only after the user clearly approves creating or updating the steward. After a successful create, show the direct steward page link using the resolved workspace slug and returned steward id.
-11. If the tool returns `activation.next_action: "reconcile_inventory"`, narrate one short sentence to the user before scanning the repo — explain what the inventory is for this steward and that it is the cached memory the steward reads on every review and consult. Then inspect the repository and call `configure_steward` with `action: "reconcile_inventory"` before drafting initialization artifacts.
-12. Before drafting or previewing initialization artifacts, show a steward readiness review covering reconciled inventory.
-13. Draft initialization artifacts from repository evidence: a report and up to four first backlog items.
-14. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary and backlog items.
-15. Ask for approval in natural language before saving initialization artifacts.
-16. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report and backlog items.
-17. End by offering two next steps: work one of the new backlog items, or define another steward.
-18. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify inventory or evidence notes.
+11. Draft an initialization report from repository evidence.
+12. Call `configure_steward` with `action: "preview_initialization"`. Show the user the report summary.
+13. Ask for approval in natural language before saving the initialization report.
+14. Call `configure_steward` with `action: "apply_initialization"` only after the user clearly approves saving the initialization report.
+15. End by offering the next steps in _Closing The Flow_.
+16. For existing stewards, update only identity, repository scope, ownership zone, rubric dimensions, and status. Update mode does not seed or modify evidence notes.
 
-If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, inventory, or evidence.
+If the product handoff prompt includes a repository marker such as `contextgraph/<repo-name-needed>`, replace it with a concrete repository slug before calling `configure_steward`. Never call the tool while `<repo-name-needed>` or any other placeholder remains in `repository`, `spec.repositories`, or evidence.
 
 ## Covered Repositories
 
-A steward's `spec.repositories` can name more than the repository you launched from, and an empty array scopes it to **every** installed repository in the workspace. The ownership zone, rubric, inventory, evidence, and initialization artifacts are only honest when they are grounded in the actual code of every repository the steward covers — not just the current checkout. A steward that watches three repos but whose inventory catalogs only one is blind to two-thirds of its zone from day one.
+A steward's `spec.repositories` can name more than the repository you launched from, and an empty array scopes it to **every** installed repository in the workspace. The ownership zone, rubric, evidence, and initialization artifacts are only honest when they are grounded in the actual code of every repository the steward covers — not just the current checkout. A steward that watches three repos but whose evidence comes from only one is blind to two-thirds of its zone from day one.
 
 Once the repository scope is settled, resolve and inspect each covered repository before drafting anything that claims to be grounded:
 
@@ -110,9 +108,9 @@ Once the repository scope is settled, resolve and inspect each covered repositor
   2. **Offer a read-only clone.** With the user's go-ahead, `git clone` it into a sibling or temporary directory and inspect that.
   3. **Ask the user** where the checkout lives, then validate the path they give you the same way.
   Validate the remote before trusting any directory you find: run `git -C <dir> remote get-url origin` and normalize both sides to the bare `owner/repo` slug — lowercase it, strip a trailing `.git`, and accept either form (`git@github.com:owner/repo`, `https://github.com/owner/repo`). A match on that normalized slug is sufficient; the full URL and protocol do not need to match. If `origin` does not match, check the directory's other remotes (`git -C <dir> remote -v`); if none resolve to the covered slug, treat the directory as not found and fall through to the next option. A same-named directory whose remote points elsewhere is not the repo.
-- **Workspace-wide stewards** (empty `repositories`) — enumerate the installed repositories from the `prepare_steward_onboarding` / `list_stewards` response, then resolve access to each the same way. If there are too many to inspect, narrow the scope to the repositories the zone actually touches, or be explicit that the inventory and evidence are seeded only from the repos you could read.
+- **Workspace-wide stewards** (empty `repositories`) — enumerate the installed repositories from the `prepare_steward_onboarding` / `list_stewards` response, then resolve access to each the same way. If there are too many to inspect, narrow the scope to the repositories the zone actually touches, or be explicit that the evidence is seeded only from the repos you could read.
 
-Never fabricate inventory rows or evidence anchors for a repository you have not actually read. If you cannot get access to a covered repository, tell the user which one and why, then either narrow `spec.repositories` to drop it or proceed with the covered set explicitly noted — do not paper over the gap with generic entries.
+Never fabricate evidence anchors for a repository you have not actually read. If you cannot get access to a covered repository, tell the user which one and why, then either narrow `spec.repositories` to drop it or proceed with the covered set explicitly noted — do not paper over the gap with generic entries.
 
 ## Repository Inspection
 
@@ -128,7 +126,7 @@ The test for any candidate steward is narrowness, not where the idea came from. 
 
 ## Integrations
 
-Connected integrations (PostHog, Axiom, and Langfuse) give the steward read-only evidence tools it can use during inventory reconciliation and chat. When a covered repository plainly uses one of these providers and the workspace has not connected it, mention the settings link once and move on: `https://www.steward.foo/<workspace-slug>/settings/integrations/<provider>`.
+Connected integrations (PostHog, Axiom, and Langfuse) give the steward read-only evidence tools it can use in chat. When a covered repository plainly uses one of these providers and the workspace has not connected it, mention the settings link once and move on: `https://www.steward.foo/<workspace-slug>/settings/integrations/<provider>`.
 
 No status lookup, no pitch.
 
@@ -145,7 +143,7 @@ Does this seem right? Any questions or adjustments before I create this steward?
 Before asking that approval question, briefly explain what this steward will do after initialization:
 
 - Vigilance: it reviews every relevant PR or commit through this rubric and raises concerns when the zone is at risk.
-- Mapping: it surveys the files, workflows, and recurring issues inside its zone and maintains its inventory — the cached memory it reads on every review and consult to recognize what it already knows about the zone.
+- Memory: it accumulates notes from its reviews and your verdicts on its concerns, so it recognizes what it already knows about the zone.
 - Advisor: it is available for focused consultation and chat when the user wants judgment about this domain.
 
 Keep this operating model to three short bullets. Tie each bullet to the concrete steward being previewed rather than describing stewards generically.
@@ -153,7 +151,7 @@ Keep this operating model to three short bullets. Tie each bullet to the concret
 After the initialization preview, ask something like:
 
 ```text
-Does this initialization plan look right? Any changes before I save the note and first backlog items?
+Does this initialization plan look right? Any changes before I save the initialization note?
 ```
 
 If the user says yes, go ahead, looks good, create it, save it, or similar, treat that as approval. If the user asks a question or requests a change, answer or revise before calling the write action.
@@ -170,19 +168,16 @@ Use the exact `workspace.slug` from `prepare_steward_onboarding` and `steward.id
 
 ## Closing The Flow
 
-After initialization artifacts are saved, do not end with only a success message. Include the direct steward page link and offer four concrete next steps:
+After initialization artifacts are saved, do not end with only a success message. Include the direct steward page link and offer three concrete next steps:
 
 ```text
 This steward is ready: https://www.steward.foo/<workspace-slug>/stewards/<steward-id>
 
 Good next steps:
-1. Work one of its new backlog items.
-2. Define another steward for a different part of the repo.
-3. Update CLAUDE.md so Claude runs steward_review after each commit and before pushing.
-4. Update CLAUDE.md or relevant skills so Claude uses consult for steward advice before implementation starts.
+1. Define another steward for a different part of the repo.
+2. Update CLAUDE.md so Claude runs steward_review after each commit and before pushing.
+3. Update CLAUDE.md or relevant skills so Claude uses consult for steward advice before implementation starts.
 ```
-
-If `/steward:work-backlog` is available, mention it as the fastest path for working the first backlog item — but scope the suggestion to the steward you just created, not the repository-wide top item. The repository's global top item may belong to a different steward, so tell the user to name this steward (or a specific new item) when invoking it, for example: "work the top backlog item for the <steward-name> steward" or "work the <item-reference> item". If that skill is not available, offer to inspect this steward's new backlog items and help choose one manually.
 
 If the user wants to define another steward, restart this skill from the beginning and preserve the same principle: ask whether they already have a zone or want repository-grounded suggestions.
 
@@ -198,7 +193,7 @@ Good dimensions are:
 
 - Judgment-focused, not topical. "Event taxonomy" works because it implies criteria; "Analytics" does not.
 - Non-overlapping. If two dimensions would both fire on the same PR for the same reason, merge them.
-- Stable. Inventory anchors reference dimension names exactly.
+- Stable. Pick names you will not need to rename.
 - Concrete. Use descriptions that say what the steward would point at.
 
 Avoid:
@@ -208,26 +203,9 @@ Avoid:
 - Mixing must-have and nice-to-have judgments under one dimension.
 - Dimensions that require data the steward cannot see.
 
-## Inventory And Evidence
+## Evidence
 
-These slots ground the steward in real artifacts. The create step seeds the durable artifact shells; after creation, the coding agent reconciles the actual inventory contents and writes the first initialization note and backlog items through activation actions. Update mode cannot edit inventory or evidence.
-
-Inventory is optional and at most one item. It is the steward's compact, complete, cached memory of its domain — and it is injected into **every review and consult**. That is what lets the steward recognize what it already knows (this surface is covered, this token is audited, this event already exists) instead of re-deriving it from the diff each time. Inventory must anchor to one or more rubric dimensions by exact name in `dimension_names`. When `apply` returns an inventory in `activation`, reconcile its entries immediately from the repository.
-
-Because the whole inventory ships into every review, two properties matter equally: it must be **complete** (a partial catalog can't catch a naming collision or confirm coverage) and each row must be **lean** (a per-row size limit will be enforced at write time in a later change). Completeness is bounded by mission narrowness: if a complete inventory of lean rows would be too large to read on every review, the zone is too broad — narrow the mission, don't summarize the inventory.
-
-**What a row is.** A row holds what review needs to know *now* about one thing — not how it got there. Inventories come in two shapes, and the row's content follows the shape:
-
-- **Catalog** — enumerates a namespace and each member's *contract*. Examples: "Analytics event catalog" (event → properties), "Inngest workflow registry" (workflow → trigger → steps), "Public route inventory", "External API surface". A row is `name + key attributes + dimension anchor`. Review value is namespace completeness: collisions, duplicates, contract drift.
-- **Coverage / audit** — enumerates a set of things and each one's *current status against a standard*. Examples: "Scanned accessibility surface inventory" (surface → is it gate-registered? → coverage mechanism → known-open gaps), "Endpoint authorization inventory" (endpoint → authz status → audit state). A row is `thing + current status + why`. Review value is the cached judgment: this is already covered / audited / a known accepted gap — don't re-flag it.
-
-**What a row is never** (regardless of shape):
-
-- **Change history** — "PR #696 then #698 did X/Y/Z", resolved-concern logs, `merged_at`. That belongs in notes.
-- **Open work items** — "should add a test for X", undocumented-thing trackers. That belongs in the backlog.
-- **Provider telemetry** — event volumes, user counts, last-seen timestamps. That is read live from the provider, not frozen into a row.
-
-Keep the current answer; drop the journey and the open work. A 4 KB row stuffed with PR-by-PR narrative is the signal that history and work-tracking have leaked into the inventory.
+Evidence grounds the steward in real artifacts. The create step seeds it; after creation, the coding agent writes the first initialization note through the activation actions below. Update mode cannot edit evidence.
 
 Evidence is a short list of repository-specific anchors. Each line names a real file, workflow, or recurring issue. Five or fewer is plenty. If you cannot list two or three pieces of concrete evidence, the steward is probably too speculative.
 
@@ -235,76 +213,19 @@ Evidence is a short list of repository-specific anchors. Each line names a real 
 
 Creation is not complete when `action: "apply"` returns. The returned `activation.next_action` tells you what to do next. These are not separate MCP tools; they are action values passed to the same `configure_steward` tool.
 
-Before scanning the repository to reconcile inventory, tell the user what is happening in one short sentence. Name the inventory (for example "the analytics event catalog" or "the interactive surface inventory") and say it is the cached memory this steward reads on every review and consult to recognize what it already knows about the zone. Do not skip this narration — the inventory step is invisible otherwise.
-
-If the next action is `reconcile_inventory`, call:
-
-```json
-{
-  "action": "reconcile_inventory",
-  "steward": { "id": "created-steward-uuid" },
-  "inventory": {
-    "inventory_id": "inventory-uuid-from-activation",
-    "entries": [
-      {
-        "key": "stable-entry-key",
-        "value": {
-          "name": "Human-readable entry name",
-          "description": "The current contract or coverage status review needs to know — not how it got there.",
-          "paths": ["path/to/file.ts"],
-          "dimension_names": ["Dimension one"]
-        }
-      }
-    ],
-    "summary": "What was reconciled and what the steward should remember."
-  }
-}
-```
-
-Use stable keys that will still make sense after files move. Prefer keys such as route names, event names, API names, workflow names, or component names over raw file paths. Do not send duplicate keys.
-
-When the steward covers more than one repository, reconcile inventory across **all** of them, not just the current checkout (see _Covered Repositories_). Prefix every entry key with the repository slug so a row read on every review is never mistaken for the wrong repository's: `<owner>/<repo>:<stable-key>` — for example `contextgraph/actions:route:login` and `contextgraph/web:route:login` are two distinct rows. Apply the prefix consistently to **every** entry once the steward covers more than one repo, including the current checkout, so keys parse and sort uniformly; a single-repo steward does not need the prefix. Keep the human-readable `name` clear about the repo too when the same path or name exists in more than one repo.
-
-Keep each row lean enough to read on every review: the current contract (catalog) or current status and why (coverage), plus paths and dimension anchors. Leave change history for notes, open work for the backlog, and provider telemetry out of the row entirely — it is read live from the provider, not frozen into inventory. A row that needs a paragraph of PR-by-PR narrative is carrying material that belongs elsewhere — the write-time per-row size limit will reject it, and the fix is to move that material out, not to split the fact across keys.
-
-Before drafting or previewing initialization artifacts, show a steward readiness review and ask whether it looks right.
-
-Inventory review:
-
-- Name the inventory and the number of reconciled entries.
-- Show representative entries, not just a count.
-- Explain what the inventory covers, and whether it is a catalog (contract per member) or a coverage/audit inventory (status per member).
-- Confirm rows are on-shape: current contract or status, not change history, open work, or telemetry.
-- Call out gaps, uncertain entries, or scope boundaries — and whether a complete inventory stays small enough to read on every review (if not, the zone may be too broad).
-
-After inventory reconciliation, or immediately after create when there is no inventory, draft initialization artifacts and call:
+After create, draft the initialization report and call:
 
 ```json
 {
   "action": "preview_initialization",
   "steward": { "id": "created-steward-uuid" },
   "initialization": {
-    "report": "A repository-grounded initialization note of at least 100 characters. Explain what you inspected, what the steward now owns, what evidence supports the domain, and what future work it should watch.",
-    "backlog_items": [
-      {
-        "repository_url": "https://github.com/owner/repo",
-        "title": "Concrete first action",
-        "objective": "What should change or be checked.",
-        "rationale": "Why this matters for the steward's domain.",
-        "file_paths": ["path/to/file.ts"],
-        "priority_category": "should",
-        "intended_deliverable": "pull_request"
-      }
-    ]
+    "report": "A repository-grounded initialization note of at least 100 characters. Explain what you inspected, what the steward now owns, what evidence supports the domain, and what future work it should watch."
   }
 }
 ```
 
 Show the preview to the user. After approval, call the same payload with `action: "apply_initialization"`.
-
-Backlog items must be specific and grounded in files the agent inspected. Use `must`, `should`, or `could` for `priority_category`. Zero backlog items is acceptable when the steward is ready but there is no honest first action.
-
-Set `intended_deliverable` to declare the artifact the item is expected to produce — `pull_request` for code-change work (the default and the common case) or `note` for an investigation, verification, or learning item whose deliverable is a recorded finding rather than a code change (the answer is the deliverable). Reach for `note` when the title frames a question to answer — "Find out whether X is gated", "Confirm Y handles concurrent writes", "Map where Z fans out" — and the honest outcome is a recorded finding even if it turns out nothing needs to change. Reach for `pull_request` (or omit the field) when the item names a code change the steward expects to ship. Mix both kinds freely on the same initialization: a measurement gap is usually a `pull_request` to add instrumentation, while a coverage audit of an unfamiliar surface is usually a `note`. In the preview, name each item's deliverable type so the user can correct the framing before approval.
 
 ## Spec Contract
 
@@ -322,11 +243,6 @@ Set `intended_deliverable` to declare the artifact the item is expected to produ
       { "name": "Dimension three", "description": "Judgment criterion." },
       { "name": "Dimension four", "description": "Judgment criterion." }
     ],
-    "inventory": {
-      "name": "Catalog name",
-      "description": "What is kept in the catalog and how it is maintained.",
-      "dimension_names": ["Dimension one"]
-    },
     "evidence": [
       "Concrete file, workflow, or incident from this repo."
     ],
@@ -338,7 +254,6 @@ Set `intended_deliverable` to declare the artifact the item is expected to produ
 - The `owner/repo` values above are shape placeholders. Replace them with concrete repository slugs from the user's workspace before calling `configure_steward`.
 - `name`, `ownership_zone`, and every rubric dimension `name` / `description` are required and non-empty.
 - `rubric_dimensions` must have 4 to 7 entries with unique names.
-- `inventory.dimension_names` must each match a rubric dimension name exactly.
 - `repositories` accepts concrete `owner/repo` slugs or full GitHub URLs; the server canonicalizes them.
 - Empty `repositories` means the steward is scoped to every installed repository in the resolved workspace. Use it intentionally.
 
@@ -358,11 +273,6 @@ Set `intended_deliverable` to declare the artifact the item is expected to produ
       { "name": "Dashboard alignment", "description": "Dashboards consume events the product actually emits." },
       { "name": "Change restraint", "description": "Schema changes include migration or communication evidence when needed." }
     ],
-    "inventory": {
-      "name": "Analytics event catalog",
-      "description": "Known events, emit sites, properties, and dashboard consumers.",
-      "dimension_names": ["Event taxonomy", "Dashboard alignment"]
-    },
     "evidence": [
       "app/signup/page.tsx emits onboarding events consumed by the activation dashboard.",
       "lib/analytics/events.ts declares named event constants used across emit sites."
@@ -389,11 +299,6 @@ Set `intended_deliverable` to declare the artifact the item is expected to produ
       { "name": "Form and error affordances", "description": "Inputs, validation errors, and status changes have programmatic names and descriptions." },
       { "name": "Contrast and readability", "description": "Text, icons, and controls remain legible across normal, hover, focus, disabled, and loading states." }
     ],
-    "inventory": {
-      "name": "Interactive surface inventory",
-      "description": "Routes, dialogs, forms, navigation regions, and reusable controls with accessibility obligations.",
-      "dimension_names": ["Keyboard reachability", "Semantic structure", "Form and error affordances"]
-    },
     "evidence": [
       "components/ui/dialog.tsx defines focus boundaries for authenticated workflows.",
       "__tests__/accessibility/wcag-color-contrast.test.ts checks contrast regressions.",
@@ -425,24 +330,22 @@ Set `intended_deliverable` to declare the artifact the item is expected to produ
 }
 ```
 
-Update mode can change identity, repository scope, ownership zone, rubric dimensions, and status. It refuses `inventory` and `evidence`; those belong to create and activation flows.
+Update mode can change identity, repository scope, ownership zone, rubric dimensions, and status. It refuses `evidence`; that belongs to the create flow.
 
 ## Guardrails
 
 - Prefer repository evidence over generic best practices.
-- A steward is only as grounded as the repositories you actually read. When `spec.repositories` covers more than the current checkout — or is empty, meaning every installed repository — inspect each covered repo (a sibling checkout, a read-only clone, or a path the user gives you) before drafting inventory, evidence, or initialization artifacts. Never fabricate grounded artifacts for a covered repository you could not read; narrow the scope or note the gap instead. See _Covered Repositories_.
+- A steward is only as grounded as the repositories you actually read. When `spec.repositories` covers more than the current checkout — or is empty, meaning every installed repository — inspect each covered repo (a sibling checkout, a read-only clone, or a path the user gives you) before drafting evidence or initialization artifacts. Never fabricate grounded artifacts for a covered repository you could not read; narrow the scope or note the gap instead. See _Covered Repositories_.
 - If this is the user's first steward in this repository, deliver the reach / rubric / vigilance orientation before any zone proposal, suggestion menu, or opening question. The orientation is required, not optional, even when `list_stewards` is unavailable.
 - Offer the three entry modes — the user's own zone (A), a battle-tested prototype (B), or recent-work suggestions (C) — before generating a zone menu, unless the user already chose one.
 - Narrowness is the admission test for every steward, in all three modes. Decompose broad headings instead of rejecting the topic.
 - Replace every handoff marker before validation or preview. A value like `contextgraph/<repo-name-needed>` is a hint, not a valid spec.
-- Keep dimension names stable; inventory anchors match names exactly.
-- An inventory row holds what review needs to know now about one thing — its current contract (catalog) or current status and why (coverage). Keep rows lean; leave change history for notes, open work for the backlog, and provider telemetry out of the row entirely.
-- Keep the inventory complete and narrow enough that the whole thing reads cheaply on every review; if it would not, narrow the mission rather than summarizing the inventory.
-- Include `inventory` and `evidence` only when creating a steward. Omit them for update mode.
+- Keep dimension names stable.
+- Include `evidence` only when creating a steward. Omit them for update mode.
 - After creating a steward, follow the returned `activation.next_action` until it is `done`.
 - Mention a provider's settings link only when a covered repository plainly uses it and the workspace has not connected it. Do not call the `integration` tool or look up connection status.
-- Do not skip initialization. If inventory or initialization feels uncertain, inspect more repository evidence before previewing.
-- After initialization, offer to work a new backlog item or define another steward.
+- Do not skip initialization. If initialization feels uncertain, inspect more repository evidence before previewing.
+- After initialization, offer the next steps in _Closing The Flow_.
 - If the tool asks for workspace disambiguation, use `repository` first. Use `workspace_id` only when supplied by the product page or user.
 - Do not say "Apply?" to the user. Ask whether the steward or initialization plan seems right and whether they want adjustments before creating or saving.
 - Do not create or update a steward that the user has not approved.

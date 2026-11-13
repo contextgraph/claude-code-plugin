@@ -1,6 +1,6 @@
 {
   "name": "steward",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Repository-native steward definition and activation for Claude Code.",
   "author": {
     "name": "steward",
@@ -9,7 +9,7 @@
   "homepage": "https://steward.foo",
   "repository": "https://github.com/contextgraph/claude-code-plugin",
   "license": "MIT",
-  "keywords": ["planning", "task-management", "productivity", "ai", "mcp", "development", "software-engineering", "context", "agentic", "workflow"],
+  "keywords": ["code-review", "steward", "mcp", "ai", "software-engineering"],
   "mcpServers": {
     "steward": {
       "type": "http",
