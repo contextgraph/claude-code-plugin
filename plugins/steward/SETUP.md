@@ -37,12 +37,6 @@ Check that the skill is available:
 /steward:define-steward
 ```
 
-Check that the backlog execution skill is available:
-
-```text
-/steward:work-backlog
-```
-
 Check that the plan-review skill is available:
 
 ```text
@@ -65,39 +59,11 @@ If update does not pick up the new skill, uninstall and install again:
 
 ## Getting Started
 
-Once connected, try:
-
-```
-Create an action to implement user authentication
-```
-
-Claude Code will use the Steward MCP server to create persistent actions that survive across sessions.
-
-To make progress on a Steward backlog, run:
+Before implementing a plan, ask the repository's stewards for feedback:
 
 ```text
-/steward:work-backlog
+/steward:plan-review
 ```
-
-With **no argument** it runs a conversational session: it shows your current
-backlog, asks what you want to accomplish (scope, how many items, whether to
-open PRs or also merge), does that work, and then hands you a parameterized
-command you can schedule as a nightly routine.
-
-With an **argument** it runs directly, no conversation — a specific item, a
-steward's top item, or a bounded batch:
-
-```text
-/steward:work-backlog work the "knip baseline" item
-/steward:work-backlog work the top item for the API-contract steward
-/steward:work-backlog --max-items 3 --autonomy pr
-```
-
-A run tends the backlog PRs already in flight (resolving conflicts, fixing CI,
-dismissing work that turns out already done), claims and implements queued
-items through linked PRs, and reports what it did plus the decisions left for
-you. Schedule the batch form as a nightly Claude Code Routine to wake up to a
-backlog report.
 
 ## Create A Steward
 
@@ -112,12 +78,12 @@ Ask Claude to inspect the repo and preview a steward. The skill will guide
 Claude through `prepare_steward_onboarding`, then `configure_steward` with `action: "validate"`, then
 `action: "preview"`, and only create it after you approve the rendered
 mission and rubric. After creation, Claude will continue the activation flow in
-the coding agent by reconciling inventory, previewing initialization artifacts,
-and saving those artifacts only after you approve them.
+the coding agent by previewing an initialization report and saving it only
+after you approve it.
 
 If the steward will cover more than the repository you launched from — scoped
 to several repos, or to the whole workspace — the skill inspects **every**
-covered repository before grounding the zone, inventory, and evidence, not just
+covered repository before grounding the zone and evidence, not just
 the current checkout. For each repo beyond the current one it resolves a local
 checkout (a sibling directory it confirms by git remote), offers a read-only
 clone, or asks where the checkout lives, so the steward is grounded in real
@@ -138,14 +104,13 @@ End-to-end test prompt:
 /steward:define-steward
 
 Inspect this repository, draft a narrow steward, preview it, and ask before
-creating it. If I approve creation, continue through inventory reconciliation
-and initialization preview before asking for final approval to save
-initialization artifacts.
+creating it. If I approve creation, continue through the initialization
+preview before asking for final approval to save it.
 ```
 
 ## Web Dashboard
 
-View and manage your actions at: **https://steward.foo**
+View and manage your stewards at: **https://steward.foo**
 
 ## Need Help?
 
